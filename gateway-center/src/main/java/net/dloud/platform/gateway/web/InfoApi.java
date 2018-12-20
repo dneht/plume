@@ -111,7 +111,7 @@ public class InfoApi {
     }
 
     @RequestMapping(value = "/method_detail")
-    public Mono<Map<String, Object>> method_detail(String group, Integer system, String invokeName, Integer invokeLength) {
+    public Mono<Map<String, Object>> method_detail(String group, Integer system, String invokeName, Integer invokeLength, Boolean useCache) {
         AssertWrapper.notNull(system, "必须输入调用系统");
 
         return Mono.fromSupplier(() -> {
@@ -122,7 +122,7 @@ public class InfoApi {
                         .orElseThrow(() -> new PassedException(PlatformExceptionEnum.NOT_FOUND));
                 log.info("[GATEWAY] 查询的方法 {} ({}) | [{}] | [{}]", invokeName, invokeLength, system, checkGroup);
 
-                if (null != methodDetail.getMethodData()) {
+                if ((null == useCache || useCache) && null != methodDetail.getMethodData()) {
                     Map<String, Object> map = KryoBaseUtil.readFromByteArray(methodDetail.getMethodData());
 
                     boolean update = false;
