@@ -264,7 +264,7 @@ public class InfoApi {
         return jdbi.withHandle(handle ->
                 infoComponent.getMethodMock(handle, checkGroup(group), invokeName, invokeLength))
                 .map(data -> Mono.just(ResultWrapper.success(jsons.mapJson(data))))
-                .orElseGet(() -> method_detail(group, system, invokeName, invokeLength)
+                .orElseGet(() -> method_detail(group, system, invokeName, invokeLength, true)
                         .flatMap(one -> Mono.just(ResultWrapper.success(
                                 jsons.mapJson(String.valueOf(one.getOrDefault("returnMock", "{}")))))));
     }

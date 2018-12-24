@@ -56,16 +56,15 @@ public class AssistComponent {
      * 向系统发送消息
      * 没有持久化，没有分组
      *
-     * @param key
      * @param message
      * @return
      */
-    public long publish(Object key, Object message) {
-        return publish(PlatformConstants.APPID + "-" + PlatformConstants.MODE + "-" + key, message);
+    public long publish(Object message) {
+        return publish(PlatformConstants.APPID + "-" + PlatformConstants.MODE + "-" + message.getClass().getTypeName(), message);
     }
 
-    public long publish(CenterEnum center, Object key, Object message) {
-        return publish(center.getTopic() + "-" + key, message);
+    public long publish(CenterEnum center, Object message) {
+        return publish(center.getTopic() + "-" + message.getClass().getTypeName(), message);
     }
 
     public long publish(String name, Object message) {
@@ -74,17 +73,18 @@ public class AssistComponent {
 
     /**
      * 监听消息
+     * 同上没有持久化，没有分组
      *
-     * @param key
      * @param listener
+     * @param clazz    要接受的消息的具体类型
      * @return
      */
-    public int listener(Object key, MessageListener<Object> listener) {
-        return listener(PlatformConstants.APPID + "-" + PlatformConstants.MODE + "-" + key, listener);
+    public int listener(MessageListener<Object> listener, Class<?> clazz) {
+        return listener(PlatformConstants.APPID + "-" + PlatformConstants.MODE + "-" + clazz.getTypeName(), listener);
     }
 
-    public int listener(CenterEnum center, Object key, MessageListener<Object> listener) {
-        return listener(center.getTopic() + "-" + key, listener);
+    public int listener(CenterEnum center, MessageListener<Object> listener, Class<?> clazz) {
+        return listener(center.getTopic() + "-" + clazz.getTypeName(), listener);
     }
 
     public int listener(String name, MessageListener<Object> listener) {

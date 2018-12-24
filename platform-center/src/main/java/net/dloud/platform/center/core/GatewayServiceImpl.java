@@ -366,7 +366,7 @@ public class GatewayServiceImpl implements GatewayService {
                 final List<InvokeKey> invokeList = Lists.newArrayListWithExpectedSize(methodList.size());
                 for (InfoMethodEntity method : methodList) {
                     final InvokeKey invokeKey = new InvokeKey(method.getGroupName(), method.getInvokeName(), method.getInvokeLength());
-                    assistComponent.publish(CenterEnum.GATEWAY_CENTER, "invokeKey", invokeKey);
+                    assistComponent.publish(CenterEnum.GATEWAY_CENTER, invokeKey);
                     invokeList.add(invokeKey);
                 }
                 log.info("[GATEWAY] 要删除的网关中的缓存: {}", invokeList);
