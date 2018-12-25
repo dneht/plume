@@ -7,10 +7,12 @@ import lombok.extern.slf4j.Slf4j;
 import net.dloud.platform.common.extend.CollectionUtil;
 import net.dloud.platform.common.extend.StringUtil;
 import net.dloud.platform.common.gateway.InjectEnum;
+import net.dloud.platform.common.gateway.bean.ApiResponse;
 import net.dloud.platform.common.gateway.info.CommentInfo;
 import net.dloud.platform.common.gateway.info.FieldDetailInfo;
 import net.dloud.platform.common.gateway.info.GenericSimpleInfo;
 import net.dloud.platform.common.gateway.info.InjectionInfo;
+import net.dloud.platform.common.platform.ValueMock;
 import net.dloud.platform.common.serialize.Beans;
 import net.dloud.platform.common.serialize.InnerTypeUtil;
 import net.dloud.platform.common.serialize.Jsons;
@@ -24,8 +26,6 @@ import net.dloud.platform.extend.constant.PlatformConstants;
 import net.dloud.platform.extend.constant.PlatformExceptionEnum;
 import net.dloud.platform.extend.exception.PassedException;
 import net.dloud.platform.extend.wrapper.AssertWrapper;
-import net.dloud.platform.common.gateway.bean.ApiResponse;
-import net.dloud.platform.gateway.util.MockUtil;
 import net.dloud.platform.gateway.util.ResultWrapper;
 import net.dloud.platform.parse.dubbo.wrapper.DubboWrapper;
 import org.jdbi.v3.core.Jdbi;
@@ -59,6 +59,9 @@ import java.util.stream.Stream;
 public class InfoApi {
     private static final Jsons jsons = Jsons.getDefault();
     private static final Beans beans = Beans.getDefault();
+
+    @Autowired
+    private ValueMock mock;
 
     @Autowired
     private Jdbi jdbi;
@@ -129,12 +132,12 @@ public class InfoApi {
                     String paramMock = methodDetail.getParamMock();
                     if (null == paramMock) {
                         update = true;
-                        paramMock = jsons.toJson(MockUtil.paramMock(map));
+                        paramMock = jsons.toJson(mock.paramMock(map));
                     }
                     String returnMock = methodDetail.getReturnMock();
                     if (null == returnMock) {
                         update = true;
-                        returnMock = jsons.toJson(MockUtil.returnMock(map));
+                        returnMock = jsons.toJson(mock.returnMock(map));
                     }
                     map.remove("methodData");
 
@@ -239,8 +242,8 @@ public class InfoApi {
                         }
                     }
 
-                    String paramMock = jsons.toJson(MockUtil.paramMock(map));
-                    String returnMock = jsons.toJson(MockUtil.returnMock(map));
+                    String paramMock = jsons.toJson(mock.paramMock(map));
+                    String returnMock = jsons.toJson(mock.returnMock(map));
                     map.remove("methodData");
 
                     final int result = infoComponent.updateMethodCache(handle, checkGroup, invokeName, invokeLength,

@@ -1,4 +1,4 @@
-package net.dloud.platform.gateway.pack;
+package net.dloud.platform.parse.jackson;
 
 import com.fasterxml.jackson.databind.introspect.Annotated;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;

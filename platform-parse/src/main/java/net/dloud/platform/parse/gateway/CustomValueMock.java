@@ -1,4 +1,4 @@
-package net.dloud.platform.gateway.util;
+package net.dloud.platform.parse.gateway;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -8,6 +8,7 @@ import net.dloud.platform.common.extend.RandomUtil;
 import net.dloud.platform.common.extend.StringUtil;
 import net.dloud.platform.common.gateway.info.FieldDetailInfo;
 import net.dloud.platform.common.gateway.info.GenericSimpleInfo;
+import net.dloud.platform.common.platform.ValueMock;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -23,35 +24,39 @@ import java.util.Map;
  **/
 @Slf4j
 @SuppressWarnings("unchecked")
-public class MockUtil {
-    private static final int DEFAULT_STRING_SIZE = 16;
+public class CustomValueMock implements ValueMock {
+    private final static int DEFAULT_STRING_SIZE = 16;
+    private final static int MAX_CONTAINER_SIZE = 4;
+    private final static int MIN_CONTAINER_SIZE = 2;
 
-    private static final int MAX_CONTAINER_SIZE = 4;
+    private final static String PARAMETER_INFO = "parameterInfo";
+    private final static String RETURN_INFO = "returnInfo";
 
-    private static final int MIN_CONTAINER_SIZE = 2;
+    private final static String DEFAULT_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
-
-    public static Object paramMock(Map<String, Object> input) {
-        if (null == input || null == input.get("parameterInfo")) {
+    @Override
+    public Object paramMock(Map<String, Object> input) {
+        if (null == input || null == input.get(PARAMETER_INFO)) {
             return Collections.emptyMap();
         }
 
-        final List<FieldDetailInfo> parameterInfo = (List) input.get("parameterInfo");
+        final List<FieldDetailInfo> parameterInfo = (List) input.get(PARAMETER_INFO);
 
         return parseField(parameterInfo);
     }
 
-    public static Object returnMock(Map<String, Object> input) {
-        if (null == input || null == input.get("returnInfo")) {
+    @Override
+    public Object returnMock(Map<String, Object> input) {
+        if (null == input || null == input.get(RETURN_INFO)) {
             return Collections.emptyMap();
         }
 
-        final Object returnObj = input.get("returnInfo");
+        final Object returnObj = input.get(RETURN_INFO);
         if (returnObj instanceof Map) {
             return Collections.emptyMap();
         }
 
-        final FieldDetailInfo returnInfo = (FieldDetailInfo) input.get("returnInfo");
+        final FieldDetailInfo returnInfo = (FieldDetailInfo) input.get(RETURN_INFO);
 
         if (null == returnInfo.getFieldList()) {
             return type2Value(returnInfo.getSimpleTypeName());
@@ -60,7 +65,7 @@ public class MockUtil {
         }
     }
 
-    private static Map<String, Object> parseField(List<FieldDetailInfo> fields) {
+    private Map<String, Object> parseField(List<FieldDetailInfo> fields) {
         if (null == fields) {
             return Collections.emptyMap();
         }
@@ -75,7 +80,7 @@ public class MockUtil {
         return map;
     }
 
-    private static Object type2Value(FieldDetailInfo field) {
+    private Object type2Value(FieldDetailInfo field) {
         final String simpleTypeName = field.getSimpleTypeName();
         final String fullTypeName = field.getFullTypeName();
 
@@ -117,14 +122,14 @@ public class MockUtil {
         return value;
     }
 
-    private static GenericSimpleInfo initType() {
+    private GenericSimpleInfo initType() {
         GenericSimpleInfo genericType = new GenericSimpleInfo();
         genericType.setSimpleName("String");
         genericType.setTypeName("java.lang.String");
         return genericType;
     }
 
-    private static void setLastType(GenericSimpleInfo genericType) {
+    private void setLastType(GenericSimpleInfo genericType) {
         final String lastTypeName = genericType.getLastTypeName();
         if (null != lastTypeName) {
             genericType.setSimpleName(StringUtil.splitLastByDot(lastTypeName));
@@ -132,7 +137,7 @@ public class MockUtil {
         }
     }
 
-    private static List<Object> initList(int size, int depth, FieldDetailInfo field,
+    private List<Object> initList(int size, int depth, FieldDetailInfo field,
                                          GenericSimpleInfo genericType) {
         final List<Object> list = Lists.newArrayListWithExpectedSize(size);
         for (int j = 0; j < size; j++) {
@@ -158,8 +163,8 @@ public class MockUtil {
         return lists[depth - 1];
     }
 
-    private static Map<Object, Object> initMap(int size, int depth, FieldDetailInfo field,
-                                               GenericSimpleInfo keyType, GenericSimpleInfo valueType) {
+    private Map<Object, Object> initMap(int size, int depth, FieldDetailInfo field,
+                                        GenericSimpleInfo keyType, GenericSimpleInfo valueType) {
         final Map<Object, Object> map = Maps.newLinkedHashMapWithExpectedSize(size);
         for (int j = 0; j < size; j++) {
             if (field.getInnerType()) {
@@ -184,7 +189,7 @@ public class MockUtil {
         return maps[depth - 1];
     }
 
-    private static Object type2Value(String simpleTypeName) {
+    private Object type2Value(String simpleTypeName) {
         Object value = null;
         if (null == simpleTypeName) {
             return RandomUtil.getRandomStringByLength(DEFAULT_STRING_SIZE);
@@ -220,7 +225,7 @@ public class MockUtil {
                 value = RandomUtil.getRandomStringByLength(DEFAULT_STRING_SIZE);
                 break;
             case "date":
-                value = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                value = LocalDateTime.now().format(DateTimeFormatter.ofPattern(DEFAULT_TIME_FORMAT));
                 break;
             case "timestamp":
                 value = System.currentTimeMillis();
@@ -228,6 +233,7 @@ public class MockUtil {
             case "object":
                 value = "undefined type";
                 break;
+            default:
         }
 
         return value;

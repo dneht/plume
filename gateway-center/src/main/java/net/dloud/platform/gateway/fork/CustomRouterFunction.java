@@ -23,6 +23,7 @@ import net.dloud.platform.common.gateway.bean.InvokeKey;
 import net.dloud.platform.common.gateway.bean.InvokeRequest;
 import net.dloud.platform.common.gateway.bean.TokenKey;
 import net.dloud.platform.common.gateway.info.InjectionInfo;
+import net.dloud.platform.common.platform.CurrentLimit;
 import net.dloud.platform.common.serialize.KryoBaseUtil;
 import net.dloud.platform.dal.InfoComponent;
 import net.dloud.platform.dal.entity.InfoMethodGateway;
@@ -104,6 +105,9 @@ public class CustomRouterFunction {
     private RegistryConfig registryConfig;
     @Autowired
     private ConsumerConfig consumerConfig;
+
+    @Autowired
+    private CurrentLimit currentLimit;
 
     @Autowired
     private Jdbi jdbi;
@@ -265,7 +269,7 @@ public class CustomRouterFunction {
             }
 
             //用户或ip维度的限流
-            if (!doLimit(request, memberInfo)) {
+            if (!currentLimit.tryConsume(request, memberInfo)) {
                 throw new PassedException(PlatformExceptionEnum.API_ACCESS_LIMIT);
             }
 
@@ -470,35 +474,6 @@ public class CustomRouterFunction {
             }
         }
         return present;
-    }
-
-    private boolean doLimit(ServerRequest request, Map<String, Object> member) {
-        Long newKey;
-        try {
-            newKey = CollectionUtil.notEmpty(member) ? NumberUtil.toLong(member.get("userId")) : LimitUtil.convertIp(request);
-        } catch (Exception e) {
-            log.warn("[GATEWAY] 获取限流key错误: {}", member);
-            newKey = LimitUtil.convertIp(request);
-        }
-
-        //从redis中初始化或获取bucket
-        Bucket bucket;
-        Map<Long, List<Bandwidth>> buckets = bucketCache.asMap();
-        List<Bandwidth> bandwidths = buckets.get(newKey);
-        if (null == bandwidths) {
-            bucket = LimitUtil.localBucket(newKey);
-        } else {
-            bucket = LimitUtil.localBucket(bandwidths);
-        }
-
-        boolean consume = bucket.tryConsume(1);
-        List<Bandwidth> present = buckets.putIfAbsent(newKey, bucket.getBandwidths());
-        if (null != present) {
-            bucket = LimitUtil.localBucket(present);
-            consume = bucket.tryConsume(1);
-            buckets.put(newKey, bucket.getBandwidths());
-        }
-        return consume;
     }
 
     @SuppressWarnings("unchecked")
