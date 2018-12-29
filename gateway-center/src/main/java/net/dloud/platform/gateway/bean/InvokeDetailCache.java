@@ -35,6 +35,11 @@ public class InvokeDetailCache {
     private Boolean whitelist = false;
 
     /**
+     * 缓存时间
+     */
+    private Integer cacheTime = 0;
+
+    /**
      * 注入参数
      */
     private Map<String, InjectionInfo> injects;

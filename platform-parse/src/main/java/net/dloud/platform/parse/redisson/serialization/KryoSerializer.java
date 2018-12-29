@@ -18,7 +18,7 @@ public class KryoSerializer implements RedisSerializer<Object> {
         }
 
         try {
-            return KryoBaseUtil.readFromByteArray(data);
+            return KryoBaseUtil.readFromByteArray(data, true);
         } catch (Exception ex) {
             throw new SerializationException("序列化失败: " + ex.getMessage(), ex);
         }
@@ -31,7 +31,7 @@ public class KryoSerializer implements RedisSerializer<Object> {
         }
 
         try {
-            return KryoBaseUtil.writeToByteArray(data);
+            return KryoBaseUtil.writeToByteArray(data, true);
         } catch (Exception ex) {
             throw new SerializationException("序列化失败: " + ex.getMessage(), ex);
         }

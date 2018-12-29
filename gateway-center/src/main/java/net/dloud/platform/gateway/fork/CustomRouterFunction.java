@@ -1,20 +1,10 @@
 package net.dloud.platform.gateway.fork;
 
-import com.alibaba.dubbo.config.ApplicationConfig;
-import com.alibaba.dubbo.config.ConsumerConfig;
-import com.alibaba.dubbo.config.ReferenceConfig;
-import com.alibaba.dubbo.config.RegistryConfig;
-import com.alibaba.dubbo.rpc.RpcContext;
 import com.alibaba.dubbo.rpc.RpcException;
 import com.alibaba.dubbo.rpc.service.GenericException;
-import com.alibaba.dubbo.rpc.service.GenericService;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
-import net.dloud.platform.common.extend.CollectionUtil;
-import net.dloud.platform.common.extend.NumberUtil;
 import net.dloud.platform.common.extend.StringUtil;
 import net.dloud.platform.common.gateway.InjectEnum;
 import net.dloud.platform.common.gateway.bean.ApiRequest;
@@ -24,11 +14,6 @@ import net.dloud.platform.common.gateway.bean.InvokeRequest;
 import net.dloud.platform.common.gateway.bean.TokenKey;
 import net.dloud.platform.common.gateway.info.InjectionInfo;
 import net.dloud.platform.common.platform.CurrentLimit;
-import net.dloud.platform.common.serialize.KryoBaseUtil;
-import net.dloud.platform.dal.InfoComponent;
-import net.dloud.platform.dal.entity.InfoMethodGateway;
-import net.dloud.platform.extend.bucket.Bandwidth;
-import net.dloud.platform.extend.bucket.Bucket;
 import net.dloud.platform.extend.constant.PlatformConstants;
 import net.dloud.platform.extend.constant.PlatformExceptionEnum;
 import net.dloud.platform.extend.exception.InnerException;
@@ -37,18 +22,14 @@ import net.dloud.platform.extend.exception.RefundException;
 import net.dloud.platform.extend.wrapper.AssertWrapper;
 import net.dloud.platform.gateway.bean.InvokeCache;
 import net.dloud.platform.gateway.bean.InvokeDetailCache;
+import net.dloud.platform.gateway.pack.GatewayCache;
+import net.dloud.platform.gateway.pack.MethodCache;
 import net.dloud.platform.gateway.util.ExceptionUtil;
 import net.dloud.platform.gateway.util.LimitUtil;
 import net.dloud.platform.gateway.util.ResultWrapper;
-import net.dloud.platform.parse.module.AssistComponent;
-import org.jdbi.v3.core.Jdbi;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.BoundHashOperations;
-import org.springframework.data.redis.core.BoundValueOperations;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpCookie;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.server.RouterFunction;
@@ -56,16 +37,13 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
-import static net.dloud.platform.parse.dubbo.wrapper.DubboWrapper.dubboProvider;
 import static org.springframework.web.reactive.function.server.RequestPredicates.OPTIONS;
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
@@ -85,75 +63,24 @@ public class CustomRouterFunction {
      * 默认服务后缀
      */
     private final String serviceSuffix = "Service";
-
     /**
-     * 缓存配置
+     * 默认方法分隔符
      */
-    @Value("${cache.expire-after-write:30}")
-    private int expireAfterWrite;
-    @Value("${cache.refresh-after-write:10}")
-    private int refreshAfterWrite;
-    @Value("${default.field-filter}")
-    private String fieldFilter;
-
-    /**
-     * dubbo配置
-     */
-    @Autowired
-    private ApplicationConfig applicationConfig;
-    @Autowired
-    private RegistryConfig registryConfig;
-    @Autowired
-    private ConsumerConfig consumerConfig;
+    private final String methodSplit = "|";
 
     @Autowired
     private CurrentLimit currentLimit;
 
     @Autowired
-    private Jdbi jdbi;
+    private MethodCache methodCache;
 
     @Autowired
-    private InfoComponent infoComponent;
+    private GatewayCache gatewayCache;
 
-    @Autowired
-    private AssistComponent assistComponent;
 
     /**
-     * 缓存服务和查询结果
+     * 处理请求
      */
-    private static Cache<InvokeKey, InvokeDetailCache> genericCache;
-    /**
-     * 用户信息相关
-     */
-    private static Cache<TokenKey, Map<String, Object>> tokenCache;
-    /**
-     * 限流相关
-     */
-    private static Cache<Long, List<Bandwidth>> bucketCache;
-
-
-    @PostConstruct
-    private void init() {
-        if (null == genericCache) {
-            genericCache = Caffeine.newBuilder().maximumSize(1_000)
-                    .expireAfterWrite(expireAfterWrite, TimeUnit.MINUTES)
-                    .refreshAfterWrite(refreshAfterWrite, TimeUnit.MINUTES)
-                    .build(this::invokeCache);
-        }
-        if (null == tokenCache) {
-            tokenCache = Caffeine.newBuilder().maximumSize(100_000)
-                    .expireAfterWrite(expireAfterWrite, TimeUnit.MINUTES)
-                    .refreshAfterWrite(refreshAfterWrite, TimeUnit.MINUTES)
-                    .build(this::tokenCache);
-        }
-        if (null == bucketCache) {
-            bucketCache = Caffeine.newBuilder().maximumSize(100_000)
-                    .expireAfterWrite(expireAfterWrite, TimeUnit.MINUTES)
-                    .build();
-        }
-        assistComponent.listener("invokeKey", (channel, msg) -> genericCache.invalidate(msg));
-    }
-
     @Bean
     public RouterFunction<ServerResponse> optionsAll() {
         return route(OPTIONS("/**"), request -> ServerResponse.ok().build());
@@ -229,20 +156,9 @@ public class CustomRouterFunction {
         return doApi(request, token, inputTenant, inputGroup, invokeNames, inputParams, false);
     }
 
-    private void setRpcContext(String inputTenant, String inputGroup, String proof) {
-        final RpcContext context = RpcContext.getContext();
-        context.setAttachment(PlatformConstants.PROOF_KEY, proof);
-        context.setAttachment(PlatformConstants.SUBGROUP_KEY, inputGroup);
-        context.setAttachment(PlatformConstants.FROM_KEY, inputTenant);
-        if (!PlatformConstants.DEFAULT_GROUP.equals(inputGroup) && CollectionUtil.notEmpty(dubboProvider.get(inputGroup))) {
-            context.setAttachment(PlatformConstants.HANDGROUP_KEY, KryoBaseUtil.writeObjectToString(dubboProvider.get(inputGroup)));
-        }
-    }
-
     /**
      * 泛化调用方法
      */
-    @SuppressWarnings("unchecked")
     private ApiResponse doApi(ServerRequest request, String token, String inputTenant, String inputGroup,
                               List<String> invokeNames, List<Map<String, Object>> inputParams, boolean fromPath) {
         final String proof = UUID.randomUUID().toString();
@@ -250,7 +166,7 @@ public class CustomRouterFunction {
         log.info("[GATEWAY] 来源: {} | 分组: {} | 调用方法: {} | 输入参数: {} | 凭证: {}",
                 inputTenant, inputGroup, invokeNames, inputParams, proof);
         AssertWrapper.isTrue(null != inputTenant && null != inputGroup, "调用方法输入错误!");
-        setRpcContext(inputTenant, inputGroup, proof);
+        methodCache.setRpcContext(inputTenant, inputGroup, proof);
 
         int i = -1;
         int size = invokeNames.size();
@@ -258,25 +174,17 @@ public class CustomRouterFunction {
         try {
             InvokeCache paramCache = doCache(inputGroup, inputParams, invokeNames);
             //校验白名单及用户信息
-            Map<String, Object> memberInfo = tokenCache(new TokenKey(token, inputTenant, inputGroup, paramCache.getInvokeName()));
-            if (!paramCache.isWhitelist()) {
-                if (StringUtil.isBlank(token)) {
-                    throw new RefundException(PlatformExceptionEnum.LOGIN_NONE);
-                }
-                if (memberInfo.isEmpty() || memberInfo.containsKey("code")) {
-                    throw new RefundException(PlatformExceptionEnum.LOGIN_EXPIRE);
-                }
-            }
+            Map<String, Object> memberInfo = doMember(inputTenant, inputGroup, paramCache, token);
 
             //用户或ip维度的限流
             if (!currentLimit.tryConsume(request, memberInfo)) {
                 throw new PassedException(PlatformExceptionEnum.API_ACCESS_LIMIT);
             }
 
+            final Map<String, Integer> needs = paramCache.getNeedCaches();
             final List<InvokeDetailCache> caches = paramCache.getInvokeDetails();
             for (i = 0; i < size; i++) {
                 String invokeName = invokeNames.get(i);
-                String methodName = StringUtil.splitLastByDot(invokeName);
                 Map<String, Object> inputParam = inputParams.get(i);
                 final InvokeDetailCache invokeDetailCache = caches.get(i);
 
@@ -285,25 +193,22 @@ public class CustomRouterFunction {
                     inputParam = Collections.emptyMap();
                 }
                 AssertWrapper.notNull(invokeDetailCache, "调用方法名未找到");
-                final Map<String, InjectionInfo> injects = invokeDetailCache.getInjects();
 
-                //拼装输入参数
-                List<Object> invokeParams = new ArrayList<>();
-                final String[] invokeCacheNames = invokeDetailCache.getNames();
-                for (int j = 0; j < invokeCacheNames.length; j++) {
-                    String getName = invokeCacheNames[j];
-                    Object getParam = inputParam.get(getName);
-                    if (null != injects && injects.keySet().contains(getName)) {
-                        getParam = doInject(getParam, injects.get(getName), memberInfo, request);
+                //处理网关缓存
+                final String needKey = invokeName + methodSplit + inputParam.size();
+                final Integer cacheTime = needs.getOrDefault(needKey, 0);
+                if (cacheTime > 0) {
+                    final Object value = gatewayCache.getValue(needKey);
+                    if (null == value) {
+                        final Object result = doResult(request, invokeName, inputParam, memberInfo, invokeDetailCache);
+                        gatewayCache.setValue(needKey, result, cacheTime);
+                        results.add(result);
+                    } else {
+                        results.add(value);
                     }
-                    invokeParams.add(getParam);
+                } else {
+                    results.add(doResult(request, invokeName, inputParam, memberInfo, invokeDetailCache));
                 }
-
-                Object result = invokeDetailCache.getService().$invoke(methodName, invokeDetailCache.getTypes(), invokeParams.toArray());
-                if (null == result) {
-                    throw new PassedException(PlatformExceptionEnum.RESULT_ERROR);
-                }
-                results.add(result);
             }
             if (fromPath) {
                 if (results.isEmpty()) {
@@ -348,6 +253,19 @@ public class CustomRouterFunction {
         return response;
     }
 
+    private Map<String, Object> doMember(String inputTenant, String inoutGroup, InvokeCache paramCache, String token) {
+        Map<String, Object> memberInfo = methodCache.tokenCache(new TokenKey(token, inputTenant, inoutGroup, paramCache.getInvokeName()));
+        if (!paramCache.isWhitelist()) {
+            if (StringUtil.isBlank(token)) {
+                throw new RefundException(PlatformExceptionEnum.LOGIN_NONE);
+            }
+            if (memberInfo.isEmpty() || memberInfo.containsKey("code")) {
+                throw new RefundException(PlatformExceptionEnum.LOGIN_EXPIRE);
+            }
+        }
+        return memberInfo;
+    }
+
     private InvokeCache doCache(String inputGroup, List<Map<String, Object>> inputParams,
                                 List<String> invokeNames) {
         final int size = invokeNames.size();
@@ -356,6 +274,7 @@ public class CustomRouterFunction {
         int invokeLevel = 0;
         String invokeMember = null;
         List<InvokeDetailCache> invokeDetails = Lists.newArrayListWithExpectedSize(size);
+        Map<String, Integer> needCaches = Maps.newHashMapWithExpectedSize(size);
 
         for (int i = 0; i < size; i++) {
             String invokeName = invokeNames.get(i);
@@ -365,10 +284,14 @@ public class CustomRouterFunction {
             }
 
             //获取缓存的数据
-            final InvokeDetailCache invokeDetail = invokeCache(new InvokeKey(inputGroup, invokeName, paramSize));
+            final InvokeDetailCache invokeDetail = methodCache.invokeCache(new InvokeKey(inputGroup, invokeName, paramSize));
             if (whitelist && !invokeDetail.getWhitelist()) {
                 log.info("[GATEWAY] 方法 {} 没有设置白名单", invokeName);
                 whitelist = false;
+            }
+            if (null != invokeDetail.getCacheTime() && invokeDetail.getCacheTime() > 0) {
+                log.info("[GATEWAY] 方法 {}|{} 将使用网关缓存", invokeName, paramSize);
+                needCaches.put(invokeName + methodSplit + paramSize, invokeDetail.getCacheTime());
             }
             final Map<String, InjectionInfo> injects = invokeDetail.getInjects();
             if (null != injects) {
@@ -383,97 +306,33 @@ public class CustomRouterFunction {
 
             invokeDetails.add(invokeDetail);
         }
-        return new InvokeCache(whitelist, invokeMember, invokeDetails);
+        return new InvokeCache(whitelist, invokeMember, needCaches, invokeDetails);
     }
 
-    private InvokeDetailCache invokeCache(InvokeKey key) {
-        return invokeCache(key, false);
-    }
+    private Object doResult(ServerRequest request, String invokeName, Map<String, Object> inputParam, Map<String, Object> memberInfo,
+                            InvokeDetailCache invokeDetailCache) {
+        //分割获取方法名
+        String methodName = StringUtil.splitLastByDot(invokeName);
+        // 获取注入信息
+        final Map<String, InjectionInfo> injects = invokeDetailCache.getInjects();
 
-    private InvokeDetailCache invokeCache(InvokeKey key, boolean token) {
-        InvokeDetailCache present = genericCache.getIfPresent(key);
-        if (null == present) {
-            final String inputGroup = key.getGroup();
-            final String invokeName = key.getInvoke();
-            final int invokeSize = key.getLength();
-
-            final InfoMethodGateway methodSimple = jdbi.withHandle(handle ->
-                    infoComponent.getGatewayMethod(handle, inputGroup, invokeName, invokeSize))
-                    .orElseThrow(() -> new PassedException(PlatformExceptionEnum.NOT_FOUND));
-
-            //拼装方法名和类型
-            List<String> names = Lists.newArrayListWithExpectedSize(invokeSize + 1);
-            List<String> types = Lists.newArrayListWithExpectedSize(invokeSize + 1);
-            if (null != methodSimple.getSimpleParameter()) {
-                //这是一个链表
-                final Map<String, String> simpleParam = KryoBaseUtil.readFromByteArray(methodSimple.getSimpleParameter());
-                for (Map.Entry<String, String> one : simpleParam.entrySet()) {
-                    names.add(one.getKey());
-                    types.add(one.getValue());
-                }
+        //拼装输入参数
+        final List<Object> invokeParams = new ArrayList<>();
+        final String[] invokeCacheNames = invokeDetailCache.getNames();
+        for (int j = 0; j < invokeCacheNames.length; j++) {
+            String getName = invokeCacheNames[j];
+            Object getParam = inputParam.get(getName);
+            if (null != injects && injects.keySet().contains(getName)) {
+                getParam = doInject(getParam, injects.get(getName), memberInfo, request);
             }
-            Map<String, InjectionInfo> injectParam = Maps.newHashMapWithExpectedSize(invokeSize);
-            if (!token) {
-                log.info("[GATEWAY}] 当前输入参数对应的名称和类型: {}", names, types);
-
-                if (null != methodSimple.getInjectionInfo()) {
-                    injectParam = KryoBaseUtil.readFromByteArray(methodSimple.getInjectionInfo());
-                    log.info("[GATEWAY] 当前要通过网关注入的参数: {}", injectParam);
-                } else {
-                    log.info("[GATEWAY] 当前没有需要通过网关注入的参数");
-                }
-            }
-
-            ReferenceConfig<GenericService> reference = new ReferenceConfig<>();
-            reference.setInterface(methodSimple.getClazzName());
-            reference.setApplication(applicationConfig);
-            reference.setRegistry(registryConfig);
-            reference.setConsumer(consumerConfig);
-            reference.setGeneric(true);
-
-            present = new InvokeDetailCache(reference.get(), names.toArray(new String[0]), types.toArray(new String[0]),
-                    methodSimple.getIsWhitelist(), injectParam);
-            genericCache.put(key, present);
-        }
-        return present;
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> tokenCache(TokenKey key) {
-        //如果token存在则进行之后的操作
-        final String token = key.getToken();
-        if (StringUtil.isBlank(token) || (token.length() != 64 && token.length() != 128)) {
-            return Collections.emptyMap();
-        }
-        if (StringUtil.isBlank(key.getInject())) {
-            key.setInject(InjectEnum.MEMBER_ID.method());
+            invokeParams.add(getParam);
         }
 
-        Map<String, Object> present = tokenCache.getIfPresent(key);
-        if (null == present) {
-            //先给定一个默认值
-            present = Collections.emptyMap();
-            String proof = RpcContext.getContext().getAttachment(PlatformConstants.PROOF_KEY);
-            String inject = key.getInject();
-            if (StringUtil.isBlank(inject)) {
-                inject = InjectEnum.MEMBER_ID.method();
-            }
-            log.info("[GATEWAY] 当前校验等级: {}", inject);
-
-            try {
-                final InvokeDetailCache invokeDetailCache = invokeCache(new InvokeKey(key.getGroup(), inject, 1), true);
-                present = (Map) invokeDetailCache.getService().$invoke(StringUtil.splitLastByDot(inject),
-                        invokeDetailCache.getTypes(), new Object[]{token});
-                log.info("[GATEWAY] 用户获取完毕, 信息: {}", present);
-
-                tokenCache.put(key, present);
-            } catch (Exception e) {
-                log.warn("[GATEWAY] 获取用户信息出错: {}", e.getMessage());
-            } finally {
-                setRpcContext(key.getTenant(), key.getGroup(), proof);
-            }
+        Object result = invokeDetailCache.getService().$invoke(methodName, invokeDetailCache.getTypes(), invokeParams.toArray());
+        if (null == result) {
+            throw new PassedException(PlatformExceptionEnum.RESULT_ERROR);
         }
-        return present;
+        return result;
     }
 
     @SuppressWarnings("unchecked")

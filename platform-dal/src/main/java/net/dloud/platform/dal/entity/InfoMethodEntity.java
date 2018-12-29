@@ -29,6 +29,8 @@ public class InfoMethodEntity extends AbstractEntity {
 
     private Boolean isBackground = false;
 
+    private Integer cacheTime = 0;
+
     private String simpleName;
 
     private byte[] simpleParameter;

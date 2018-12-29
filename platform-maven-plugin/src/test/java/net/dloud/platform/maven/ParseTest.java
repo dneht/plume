@@ -5,7 +5,6 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.HashSet;
 
@@ -21,11 +20,11 @@ public class ParseTest {
                 "net.dloud.platform.common.annotation.Permission",
                 "net.dloud.platform.common.annotation.Whitelist",
                 "net.dloud.platform.common.annotation.Background",
+                "net.dloud.platform.common.annotation.Cacheable",
                 "net.dloud.platform.common.annotation.Enquire",
                 false, new HashSet<>(), new HashSet<>());
 
-
-        String path = "/Users/dor/Projects/now/platform-all/common-client/src/main/java/net/dloud/platform/common/domain/result/PairResult.java";
+        String path = "/Users/dor/Projects/now/suture/common-client/src/main/java/net/dloud/platform/common/client/GatewayService.java";
         File file = Paths.get(path).toFile();
         final int length = (int) file.length();
         char[] chars = new char[length];

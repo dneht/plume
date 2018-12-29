@@ -16,6 +16,9 @@ import java.io.IOException;
  * @create 2018-09-18 12:09
  **/
 public class KryoBaseUtil {
+    private static final int defSize = 8 * 1024;
+    private static final int bigSize = 256 * 1024;
+
     /**
      * 每个线程的 Kryo 实例
      */
@@ -39,10 +42,6 @@ public class KryoBaseUtil {
             SerializerFactory.CompatibleFieldSerializerFactory defaultFactory = new SerializerFactory.CompatibleFieldSerializerFactory();
             defaultFactory.getConfig().setReadUnknownTagData(true);
             kryo.setDefaultSerializer(defaultFactory);
-
-            //5.0以下修复集合的NPE问题
-            //((Kryo.DefaultInstantiatorStrategy) kryo.getInstantiatorStrategy())
-            //        .setFallbackInstantiatorStrategy(new StdInstantiatorStrategy());
 
             return kryo;
         }
@@ -74,11 +73,12 @@ public class KryoBaseUtil {
         return writeToByteArray(obj, false, false);
     }
 
+    public static <T> byte[] writeToByteArray(T obj, boolean big) {
+        return writeToByteArray(obj, false, big);
+    }
+
     public static <T> byte[] writeToByteArray(T obj, boolean cut, boolean big) {
-        int outputSize = 8 * 1024;
-        if (big) {
-            outputSize = 256 * 1024;
-        }
+        int outputSize = big ? bigSize : defSize;
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
              Output output = new Output(byteArrayOutputStream, outputSize)) {
             Kryo kryo = getInstance();
@@ -132,10 +132,7 @@ public class KryoBaseUtil {
             return null;
         }
 
-        int inputSize = 8 * 1024;
-        if (big) {
-            inputSize = 256 * 1024;
-        }
+        int inputSize = big ? bigSize : defSize;
         if (cut) {
             try {
                 byteArray = Snappy.uncompress(byteArray);

@@ -4,7 +4,7 @@
     <parent>
         <groupId>net.dloud.suture</groupId>
         <artifactId>platform</artifactId>
-        <version>0.4.0.0</version>
+        <version>0.5.0.1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -19,7 +19,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.7</maven.compiler.source>
         <maven.compiler.target>1.7</maven.compiler.target>
-        <jdt.version>3.15.0</jdt.version>
+        <jdt.version>3.16.0</jdt.version>
         <snappy.version>1.1.7.2</snappy.version>
         <kryo.version>5.0.0-RC1</kryo.version>
         <fastjson.version>1.2.49</fastjson.version>

@@ -18,6 +18,8 @@ public class InfoMethodGateway {
 
     private Boolean isBackground;
 
+    private Integer cacheTime;
+
     private String simpleName;
 
     private byte[] simpleParameter;

@@ -62,4 +62,9 @@ public class MethodInfo implements Serializable {
      * 是否在是后台接口
      */
     private Boolean ifBackground = false;
+
+    /**
+     * 要缓存的时间
+     */
+    private Integer cacheTime = 0;
 }

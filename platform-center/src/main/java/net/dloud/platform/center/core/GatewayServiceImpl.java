@@ -66,7 +66,7 @@ public class GatewayServiceImpl implements GatewayService {
     /**
      * 默认分隔符
      */
-    private final String serviceSpilit = "\\.";
+    private final String serviceSplit = "\\.";
 
 
     @Value("#{'${clazz.import-suffix}'.split(',')}")
@@ -169,7 +169,6 @@ public class GatewayServiceImpl implements GatewayService {
         List<ClassInfo> classList = Lists.newArrayListWithExpectedSize(length);
         try {
             for (i = 0; i < length; i++) {
-
                 final ClassInfo classInfo = KryoBaseUtil.readFromByteArray(methodInfo[i], true, false);
                 className.add(classInfo.getQualifiedName());
                 classList.add(classInfo);
@@ -331,6 +330,7 @@ public class GatewayServiceImpl implements GatewayService {
                     }
                     infoMethod.setIsWhitelist(null == methodInfo.getIfWhitelist() ? false : methodInfo.getIfWhitelist());
                     infoMethod.setIsBackground(null == methodInfo.getIfBackground() ? false : methodInfo.getIfBackground());
+                    infoMethod.setCacheTime(null == methodInfo.getCacheTime() ? 0 : methodInfo.getCacheTime());
                     infoMethod.setCreatedAt(now);
                     infoMethod.setUpdatedAt(now);
                     methodList.add(infoMethod);
@@ -380,7 +380,7 @@ public class GatewayServiceImpl implements GatewayService {
         if (null == invokeName) {
             throw new PassedException("网关加载文件生成错误");
         }
-        final String[] invokes = invokeName.split(serviceSpilit);
+        final String[] invokes = invokeName.split(serviceSplit);
         if (invokes.length != 3) {
             throw new PassedException("网关加载文件生成错误");
         }

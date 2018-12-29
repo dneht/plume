@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author QuDasheng
@@ -23,6 +24,11 @@ public class InvokeCache {
      * 返回信息最多调用名
      */
     private String invokeName;
+
+    /**
+     * 需要使用缓存的方法
+     */
+    private Map<String, Integer> needCaches;
 
     /**
      * 方法缓存

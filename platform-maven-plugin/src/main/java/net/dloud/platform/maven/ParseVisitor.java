@@ -65,6 +65,7 @@ public class ParseVisitor extends ASTVisitor {
     private String permissionType;
     private String whitelistType;
     private String backgroundType;
+    private String cacheableType;
     private String enquireType;
 
     private Set<String> filterSuffix;
@@ -83,10 +84,11 @@ public class ParseVisitor extends ASTVisitor {
     private boolean isPrimitive = false;
     private boolean isWhitelist = false;
     private boolean isBackground = false;
+    private int cacheTime = 0;
 
 
     public ParseVisitor(String systemName, String injectionType, String injectionEnum,
-                        String permissionType, String whitelistType, String backgroundType, String enquireType,
+                        String permissionType, String whitelistType, String backgroundType, String cacheableType, String enquireType,
                         boolean useAnnotation, Set<String> filterSuffix, Set<String> fliedFilter) {
         this.systemName = systemName;
         this.injectionType = injectionType;
@@ -94,6 +96,7 @@ public class ParseVisitor extends ASTVisitor {
         this.permissionType = permissionType;
         this.whitelistType = whitelistType;
         this.backgroundType = backgroundType;
+        this.cacheableType = cacheableType;
         this.enquireType = enquireType;
         this.useAnnotation = useAnnotation;
         this.filterSuffix = filterSuffix;
@@ -209,6 +212,9 @@ public class ParseVisitor extends ASTVisitor {
         if (annotationInfoTuple.ifBackground) {
             isBackground = true;
         }
+        if (annotationInfoTuple.cacheTime > 0) {
+            cacheTime = annotationInfoTuple.cacheTime;
+        }
         if (null != annotationInfoTuple.permissionInfo) {
             permissionInfo = annotationInfoTuple.permissionInfo;
         }
@@ -278,6 +284,12 @@ public class ParseVisitor extends ASTVisitor {
             }
             if (isBackground || annotationInfoTuple.ifBackground) {
                 methodInfo.setIfBackground(true);
+            }
+            if (cacheTime > 0) {
+                methodInfo.setCacheTime(cacheTime);
+            }
+            if (annotationInfoTuple.cacheTime > 0) {
+                methodInfo.setCacheTime(annotationInfoTuple.cacheTime);
             }
             final PermissionInfo permissionInfo = annotationInfoTuple.permissionInfo;
             if (null != this.permissionInfo || null != permissionInfo) {
@@ -415,6 +427,13 @@ public class ParseVisitor extends ASTVisitor {
                 if (backgroundType.equalsIgnoreCase(annotationInfo.getQualifiedName())) {
                     annotationInfoPair.ifBackground = true;
                 }
+                if (cacheableType.equalsIgnoreCase(annotationInfo.getQualifiedName())) {
+                    Map<String, Object> annotationValue = annotationInfo.getAnnotationValue();
+                    annotationInfoPair.cacheTime = 1;
+                    if (null != annotationValue && null != annotationValue.get("value")) {
+                        annotationInfoPair.cacheTime = Integer.valueOf(String.valueOf(annotationValue.get("value")));
+                    }
+                }
                 if (permissionType.equalsIgnoreCase(annotationInfo.getQualifiedName())) {
                     Map<String, Object> annotationValue = annotationInfo.getAnnotationValue();
                     if (null == annotationValue) {
@@ -519,6 +538,17 @@ public class ParseVisitor extends ASTVisitor {
         return annotationInfoPair;
     }
 
+    private static class AnnotationInfoTuple {
+        List<AnnotationInfo> annotationInfos;
+        PermissionInfo permissionInfo;
+        InjectionInfo injectionInfo;
+        boolean ifInjection = false;
+        boolean ifWhitelist = false;
+        boolean ifBackground = false;
+        int cacheTime = 0;
+        boolean ifEnquire = false;
+    }
+
     public List<ClassInfo> getSourceInfo() {
         infoImport.removeAll(Arrays.asList(injectionType, injectionEnum, permissionType, whitelistType, enquireType));
         for (ClassInfo classInfo : sourceInfo) {
@@ -535,15 +565,5 @@ public class ParseVisitor extends ASTVisitor {
 
     public boolean isInterface() {
         return isInterface;
-    }
-
-    private static class AnnotationInfoTuple {
-        List<AnnotationInfo> annotationInfos;
-        PermissionInfo permissionInfo;
-        InjectionInfo injectionInfo;
-        boolean ifInjection = false;
-        boolean ifWhitelist = false;
-        boolean ifBackground = false;
-        boolean ifEnquire = false;
     }
 }

@@ -22,6 +22,8 @@ public class InfoMethodDetail {
 
     private boolean isBackground;
 
+    private int cacheTime;
+
     private byte[] parameterInfo;
 
     private byte[] returnInfo;
