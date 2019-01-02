@@ -20,6 +20,8 @@ public class InfoMethodGateway {
 
     private Integer cacheTime;
 
+    private Boolean isTrack;
+
     private String simpleName;
 
     private byte[] simpleParameter;

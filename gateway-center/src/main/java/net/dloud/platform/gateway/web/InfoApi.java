@@ -12,7 +12,7 @@ import net.dloud.platform.common.gateway.info.CommentInfo;
 import net.dloud.platform.common.gateway.info.FieldDetailInfo;
 import net.dloud.platform.common.gateway.info.GenericSimpleInfo;
 import net.dloud.platform.common.gateway.info.InjectionInfo;
-import net.dloud.platform.common.platform.ValueMock;
+import net.dloud.platform.common.provider.ValueMock;
 import net.dloud.platform.common.serialize.Beans;
 import net.dloud.platform.common.serialize.InnerTypeUtil;
 import net.dloud.platform.common.serialize.Jsons;

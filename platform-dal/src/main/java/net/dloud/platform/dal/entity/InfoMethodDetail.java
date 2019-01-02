@@ -24,6 +24,8 @@ public class InfoMethodDetail {
 
     private int cacheTime;
 
+    private boolean isTrack = false;
+
     private byte[] parameterInfo;
 
     private byte[] returnInfo;

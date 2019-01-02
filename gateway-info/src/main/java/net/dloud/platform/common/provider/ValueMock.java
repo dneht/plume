@@ -1,4 +1,4 @@
-package net.dloud.platform.common.platform;
+package net.dloud.platform.common.provider;
 
 import java.util.Map;
 

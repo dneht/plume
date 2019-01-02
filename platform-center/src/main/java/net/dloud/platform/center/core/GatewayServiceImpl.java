@@ -328,9 +328,10 @@ public class GatewayServiceImpl implements GatewayService {
                     if (null != permissionInfo) {
                         infoMethod.setPermissionInfo(convertField(permissionInfo));
                     }
-                    infoMethod.setIsWhitelist(null == methodInfo.getIfWhitelist() ? false : methodInfo.getIfWhitelist());
-                    infoMethod.setIsBackground(null == methodInfo.getIfBackground() ? false : methodInfo.getIfBackground());
+                    infoMethod.setIsWhitelist(null == methodInfo.getIfWhitelist() ? Boolean.FALSE : methodInfo.getIfWhitelist());
+                    infoMethod.setIsBackground(null == methodInfo.getIfBackground() ? Boolean.FALSE : methodInfo.getIfBackground());
                     infoMethod.setCacheTime(null == methodInfo.getCacheTime() ? 0 : methodInfo.getCacheTime());
+                    infoMethod.setIsTrack(null == methodInfo.getIfTrack() ? Boolean.FALSE : methodInfo.getIfTrack());
                     infoMethod.setCreatedAt(now);
                     infoMethod.setUpdatedAt(now);
                     methodList.add(infoMethod);

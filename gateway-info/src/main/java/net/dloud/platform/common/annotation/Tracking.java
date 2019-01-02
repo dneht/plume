@@ -6,16 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 缓存
- *
  * @author QuDasheng
- * @create 2018-12-29 15:15
+ * @create 2019-01-02 11:09
  **/
-@Target({ElementType.TYPE, ElementType.METHOD})
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.SOURCE)
-public @interface Cacheable {
-    /**
-     * 缓存时间，单位分钟
-     */
-    int value() default 1;
+public @interface Tracking {
 }

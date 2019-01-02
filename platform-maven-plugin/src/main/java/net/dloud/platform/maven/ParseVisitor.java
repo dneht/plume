@@ -66,6 +66,7 @@ public class ParseVisitor extends ASTVisitor {
     private String whitelistType;
     private String backgroundType;
     private String cacheableType;
+    private String trackingType;
     private String enquireType;
 
     private Set<String> filterSuffix;
@@ -88,7 +89,7 @@ public class ParseVisitor extends ASTVisitor {
 
 
     public ParseVisitor(String systemName, String injectionType, String injectionEnum,
-                        String permissionType, String whitelistType, String backgroundType, String cacheableType, String enquireType,
+                        String permissionType, String whitelistType, String backgroundType, String cacheableType, String trackingType, String enquireType,
                         boolean useAnnotation, Set<String> filterSuffix, Set<String> fliedFilter) {
         this.systemName = systemName;
         this.injectionType = injectionType;
@@ -97,6 +98,7 @@ public class ParseVisitor extends ASTVisitor {
         this.whitelistType = whitelistType;
         this.backgroundType = backgroundType;
         this.cacheableType = cacheableType;
+        this.trackingType = trackingType;
         this.enquireType = enquireType;
         this.useAnnotation = useAnnotation;
         this.filterSuffix = filterSuffix;
@@ -291,6 +293,9 @@ public class ParseVisitor extends ASTVisitor {
             if (annotationInfoTuple.cacheTime > 0) {
                 methodInfo.setCacheTime(annotationInfoTuple.cacheTime);
             }
+            if (annotationInfoTuple.ifTrack) {
+                methodInfo.setIfTrack(true);
+            }
             final PermissionInfo permissionInfo = annotationInfoTuple.permissionInfo;
             if (null != this.permissionInfo || null != permissionInfo) {
                 methodInfo.setPermissionInfo(null == permissionInfo ? this.permissionInfo : permissionInfo);
@@ -434,6 +439,9 @@ public class ParseVisitor extends ASTVisitor {
                         annotationInfoPair.cacheTime = Integer.valueOf(String.valueOf(annotationValue.get("value")));
                     }
                 }
+                if (trackingType.equalsIgnoreCase(annotationInfo.getQualifiedName())) {
+                    annotationInfoPair.ifTrack = true;
+                }
                 if (permissionType.equalsIgnoreCase(annotationInfo.getQualifiedName())) {
                     Map<String, Object> annotationValue = annotationInfo.getAnnotationValue();
                     if (null == annotationValue) {
@@ -546,6 +554,7 @@ public class ParseVisitor extends ASTVisitor {
         boolean ifWhitelist = false;
         boolean ifBackground = false;
         int cacheTime = 0;
+        boolean ifTrack = false;
         boolean ifEnquire = false;
     }
 

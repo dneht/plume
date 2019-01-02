@@ -1,4 +1,4 @@
-package net.dloud.platform.common.gateway;
+package net.dloud.platform.common.platform;
 
 /**
  * @author QuDasheng

@@ -21,10 +21,11 @@ public class ParseTest {
                 "net.dloud.platform.common.annotation.Whitelist",
                 "net.dloud.platform.common.annotation.Background",
                 "net.dloud.platform.common.annotation.Cacheable",
+                "net.dloud.platform.common.annotation.Tracking",
                 "net.dloud.platform.common.annotation.Enquire",
                 false, new HashSet<>(), new HashSet<>());
 
-        String path = "/Users/dor/Projects/now/suture/common-client/src/main/java/net/dloud/platform/common/client/GatewayService.java";
+        String path = "/Users/dor/Projects/now/platform-all/common-client/src/main/java/net/dloud/platform/common/client/GatewayService.java";
         File file = Paths.get(path).toFile();
         final int length = (int) file.length();
         char[] chars = new char[length];

@@ -13,7 +13,7 @@ import net.dloud.platform.common.gateway.bean.InvokeKey;
 import net.dloud.platform.common.gateway.bean.InvokeRequest;
 import net.dloud.platform.common.gateway.bean.TokenKey;
 import net.dloud.platform.common.gateway.info.InjectionInfo;
-import net.dloud.platform.common.platform.CurrentLimit;
+import net.dloud.platform.common.provider.CurrentLimit;
 import net.dloud.platform.extend.constant.PlatformConstants;
 import net.dloud.platform.extend.constant.PlatformExceptionEnum;
 import net.dloud.platform.extend.exception.InnerException;
@@ -198,10 +198,10 @@ public class CustomRouterFunction {
                 final String needKey = invokeName + methodSplit + inputParam.size();
                 final Integer cacheTime = needs.getOrDefault(needKey, 0);
                 if (cacheTime > 0) {
-                    final Object value = gatewayCache.getValue(needKey);
+                    final Object value = gatewayCache.getValue(needKey, inputParam, inputTenant, inputGroup);
                     if (null == value) {
                         final Object result = doResult(request, invokeName, inputParam, memberInfo, invokeDetailCache);
-                        gatewayCache.setValue(needKey, result, cacheTime);
+                        gatewayCache.setValue(needKey, inputParam, inputTenant, inputGroup, result, cacheTime);
                         results.add(result);
                     } else {
                         results.add(value);

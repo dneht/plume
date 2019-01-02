@@ -92,6 +92,9 @@ public class ParseMojo extends AbstractMojo {
     @Parameter(property = "cacheableType", defaultValue = "net.dloud.platform.common.annotation.Cacheable")
     private String cacheableType;
 
+    @Parameter(property = "trackingType", defaultValue = "net.dloud.platform.common.annotation.Tracking")
+    private String trackingType;
+
     @Parameter(property = "enquireType", defaultValue = "net.dloud.platform.common.annotation.Enquire")
     private String enquireType;
 
@@ -244,7 +247,7 @@ public class ParseMojo extends AbstractMojo {
     private ParseVisitor parseVisitor(File one) throws IOException {
         log.info("Process File: " + one);
         ParseVisitor visitor = new ParseVisitor(systemName, injectionType, injectionEnum,
-                permissionType, whitelistType, backgroundType, cacheableType, enquireType, isAnnotation, suffix, flieds);
+                permissionType, whitelistType, backgroundType, cacheableType, trackingType, enquireType, isAnnotation, suffix, flieds);
         final int length = (int) one.length();
         char[] chars = new char[length];
         try (final FileReader reader = new FileReader(one)) {

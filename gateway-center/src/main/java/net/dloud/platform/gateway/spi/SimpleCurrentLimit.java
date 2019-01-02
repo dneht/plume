@@ -1,4 +1,4 @@
-package net.dloud.platform.parse.gateway;
+package net.dloud.platform.gateway.spi;
 
 
 import com.github.benmanes.caffeine.cache.Cache;
@@ -6,7 +6,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.extern.slf4j.Slf4j;
 import net.dloud.platform.common.extend.CollectionUtil;
 import net.dloud.platform.common.extend.NumberUtil;
-import net.dloud.platform.common.platform.CurrentLimit;
+import net.dloud.platform.common.provider.CurrentLimit;
 import net.dloud.platform.extend.bucket.Bandwidth;
 import net.dloud.platform.extend.bucket.Bucket;
 import net.dloud.platform.extend.bucket.SimpleBucket;

@@ -67,4 +67,9 @@ public class MethodInfo implements Serializable {
      * 要缓存的时间
      */
     private Integer cacheTime = 0;
+
+    /**
+     * 是否需要记录调用
+     */
+    private Boolean ifTrack = false;
 }

@@ -1,5 +1,7 @@
 package net.dloud.platform.common.gateway;
 
+import net.dloud.platform.common.platform.BaseInjectEnum;
+
 /**
  * 必须继承 BaseInjectEnum
  *

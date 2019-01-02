@@ -1,4 +1,4 @@
-package net.dloud.platform.parse.gateway;
+package net.dloud.platform.gateway.spi;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -8,7 +8,7 @@ import net.dloud.platform.common.extend.RandomUtil;
 import net.dloud.platform.common.extend.StringUtil;
 import net.dloud.platform.common.gateway.info.FieldDetailInfo;
 import net.dloud.platform.common.gateway.info.GenericSimpleInfo;
-import net.dloud.platform.common.platform.ValueMock;
+import net.dloud.platform.common.provider.ValueMock;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

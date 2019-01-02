@@ -1,4 +1,4 @@
-package net.dloud.platform.common.platform;
+package net.dloud.platform.common.provider;
 
 import net.dloud.platform.common.gateway.bean.ApiRequest;
 import net.dloud.platform.common.gateway.bean.InvokeRequest;

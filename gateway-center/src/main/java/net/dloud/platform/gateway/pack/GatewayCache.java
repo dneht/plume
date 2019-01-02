@@ -14,15 +14,19 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Component
 public class GatewayCache {
+    private static final char separator = ':';
+
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
 
-    public Object getValue(String method) {
-        return redisTemplate.opsForValue().get(method);
+    public Object getValue(String method, Object param, String tenant, String group) {
+        return redisTemplate.opsForValue().get(method + separator + tenant + separator + group
+                + separator + param.hashCode());
     }
 
-    public void setValue(String method, Object value, int time) {
-        redisTemplate.opsForValue().set(method, value, time, TimeUnit.MINUTES);
+    public void setValue(String method, Object param, String tenant, String group, Object value, int time) {
+        redisTemplate.opsForValue().set(method + separator + tenant + separator + group
+                + separator + param.hashCode(), value, time, TimeUnit.MINUTES);
     }
 }

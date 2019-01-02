@@ -31,6 +31,8 @@ public class InfoMethodEntity extends AbstractEntity {
 
     private Integer cacheTime = 0;
 
+    private Boolean isTrack = false;
+
     private String simpleName;
 
     private byte[] simpleParameter;

@@ -1,9 +1,9 @@
 package net.dloud.platform.gateway.conf;
 
 import lombok.extern.slf4j.Slf4j;
-import net.dloud.platform.common.platform.CurrentLimit;
-import net.dloud.platform.common.platform.Signature;
-import net.dloud.platform.common.platform.ValueMock;
+import net.dloud.platform.common.provider.CurrentLimit;
+import net.dloud.platform.common.provider.Signature;
+import net.dloud.platform.common.provider.ValueMock;
 import net.dloud.platform.extend.exception.InnerException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,9 +30,7 @@ public class ServiceProviderLoader {
 
     /**
      * 签名方法未实现
-     * @return
      */
-    @Bean
     public Signature getSignature() {
         return getProvider(Signature.class);
     }
