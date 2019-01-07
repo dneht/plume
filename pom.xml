@@ -4,12 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>net.dloud.suture</groupId>
-    <artifactId>platform</artifactId>
+    <groupId>net.dloud.mimiron</groupId>
+    <artifactId>mimiron</artifactId>
     <packaging>pom</packaging>
-    <version>0.5.0.1</version>
+    <version>0.5.1.0</version>
 
-    <name>Suture</name>
+    <name>Mimiron</name>
     <description>a simple dubbo gateway and platform</description>
     <url>https://back.pub</url>
     <prerequisites>
@@ -17,9 +17,9 @@
     </prerequisites>
 
     <scm>
-        <url>git@github.com:dneht/suture.git</url>
-        <connection>scm:git@github.com:dneht/suture.git</connection>
-        <developerConnection>scm:git@github.com:dneht/suture.git</developerConnection>
+        <url>git@github.com:dneht/mimiron.git</url>
+        <connection>scm:git@github.com:dneht/mimiron.git</connection>
+        <developerConnection>scm:git@github.com:dneht/mimiron.git</developerConnection>
     </scm>
 
     <developers>
@@ -109,32 +109,32 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>net.dloud.suture</groupId>
+                <groupId>net.dloud.mimiron</groupId>
                 <artifactId>common-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.dloud.suture</groupId>
+                <groupId>net.dloud.mimiron</groupId>
                 <artifactId>gateway-info</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.dloud.suture</groupId>
+                <groupId>net.dloud.mimiron</groupId>
                 <artifactId>common-utils</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.dloud.suture</groupId>
+                <groupId>net.dloud.mimiron</groupId>
                 <artifactId>platform-utils</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.dloud.suture</groupId>
+                <groupId>net.dloud.mimiron</groupId>
                 <artifactId>platform-parse</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.dloud.suture</groupId>
+                <groupId>net.dloud.mimiron</groupId>
                 <artifactId>platform-dal</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -701,7 +701,7 @@
                     <version>${spring.boot.version}</version>
                 </plugin>
                 <plugin>
-                    <groupId>net.dloud.suture</groupId>
+                    <groupId>net.dloud.mimiron</groupId>
                     <artifactId>platform-maven-plugin</artifactId>
                     <version>${project.version}</version>
                     <executions>
