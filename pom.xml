@@ -11,7 +11,7 @@
 
     <name>Mimiron</name>
     <description>a simple dubbo gateway and platform</description>
-    <url>https://back.pub</url>
+    <url>https://dloud.net</url>
     <prerequisites>
         <maven>3.3.0</maven>
     </prerequisites>
@@ -101,9 +101,9 @@
         <maven-cobertura-plugin>2.7</maven-cobertura-plugin>
         <maven-cobertura-logback>1.1.7</maven-cobertura-logback>
         <maven-assembly-plugin>2.6</maven-assembly-plugin>
-        <public.repo>http://do.back.pub:19881/repository/maven-public/</public.repo>
-        <releases.repo>http://do.back.pub:19881/repository/maven-releases/</releases.repo>
-        <snapshots.repo>http://do.back.pub:19881/repository/maven-snapshots/</snapshots.repo>
+        <public.repo>https://oss.sonatype.org/content/groups/public</public.repo>
+        <releases.repo>https://oss.sonatype.org/service/local/staging/deploy/maven2</releases.repo>
+        <snapshots.repo>https://oss.sonatype.org/content/repositories/snapshots</snapshots.repo>
     </properties>
 
     <dependencyManagement>
@@ -730,6 +730,10 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
                     <archive>
@@ -745,7 +749,7 @@
 
     <repositories>
         <repository>
-            <id>my-public</id>
+            <id>sona-public</id>
             <url>${public.repo}</url>
             <snapshots>
                 <enabled>true</enabled>
@@ -754,7 +758,7 @@
     </repositories>
     <pluginRepositories>
         <pluginRepository>
-            <id>my-public</id>
+            <id>sona-public</id>
             <url>${public.repo}</url>
             <snapshots>
                 <enabled>true</enabled>
@@ -764,11 +768,11 @@
 
     <distributionManagement>
         <repository>
-            <id>my-releases</id>
+            <id>sona-releases</id>
             <url>${releases.repo}</url>
         </repository>
         <snapshotRepository>
-            <id>my-snapshots</id>
+            <id>sona-snapshots</id>
             <url>${snapshots.repo}</url>
         </snapshotRepository>
     </distributionManagement>
