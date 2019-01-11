@@ -21,7 +21,8 @@
 9. [基于数据库的序列生成器](quickstart/i9.sequence-component.md)
 10. [调试时使用的模拟网关](quickstart/i10.simple-gateway.md)
 11. [简单的调用日志链路](quickstart/i11.simple-call-link.md)
-
+12. [优雅关机(只有tomcat和undertow)](quickstart/i12.graceful-shutdown.md)
+13. [开启Security(内存用户)](quickstart/i13.spring-security-simple.md)
 
 ## 未实现部分
 1. 接口签名具体实现

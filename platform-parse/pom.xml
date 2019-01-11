@@ -5,7 +5,7 @@
     <parent>
         <groupId>net.dloud.mimiron</groupId>
         <artifactId>mimiron</artifactId>
-        <version>0.5.1.0</version>
+        <version>0.5.2.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -20,6 +20,10 @@
         <dependency>
             <groupId>net.dloud.mimiron</groupId>
             <artifactId>platform-utils</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.dloud.mimiron</groupId>
+            <artifactId>platform-actuator</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.curator</groupId>

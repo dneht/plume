@@ -31,9 +31,6 @@ public class InfoComponent implements MapperComponent {
     private static final String INFO_CLAZZ = "info_clazz";
     private static final String INFO_METHOD = "info_method";
 
-    @Autowired
-    private Jdbi jdbi;
-
 
     /**
      * 分组列表

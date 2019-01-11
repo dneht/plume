@@ -12,7 +12,7 @@ public class RunHost {
     public static InetAddress localHost = AddressGet.getLocal();
 
     public static boolean canUseDomain(String input) {
-        if (null != input && input.equalsIgnoreCase(PlatformConstants.HOST)) {
+        if (null != input && input.endsWith(PlatformConstants.HOST)) {
             return true;
         } else {
             return false;
@@ -21,7 +21,7 @@ public class RunHost {
 
     public static boolean canUseDomain(InetAddress local, String hostname) {
         if (null != local && null != local.getHostName() && null != hostname
-                && hostname.equalsIgnoreCase(local.getHostName())) {
+                && local.getHostName().endsWith(hostname)) {
             return true;
         } else {
             return false;

@@ -4,6 +4,7 @@ import com.ctrip.framework.apollo.spring.config.PropertySourcesConstants;
 import com.google.common.collect.ImmutableMap;
 import lombok.extern.slf4j.Slf4j;
 import net.dloud.platform.common.extend.StringUtil;
+import net.dloud.platform.common.security.Digests;
 import net.dloud.platform.extend.constant.PlatformConstants;
 import net.dloud.platform.extend.constant.StartupConstants;
 import net.dloud.platform.extend.exception.InnerException;
@@ -63,29 +64,29 @@ public class DloudApplicationContextInitializer implements ApplicationContextIni
             log.info("App port range from {} to {}", portStart, portEnd);
 
             int availableCount = 0;
-            int[] availablePorts = new int[3];
+            int[] availablePorts = new int[2];
             for (int port = portStart; port < portEnd; port++) {
                 try {
                     final ServerSocket server = new ServerSocket(port);
                     availablePorts[availableCount] = server.getLocalPort();
                     availableCount += 1;
                     server.close();
-                    if (availableCount >= 3) {
+                    if (availableCount >= 2) {
                         break;
                     }
                 } catch (IOException e) {
                     log.debug("Port {} is already used", port);
                 }
             }
-
-            log.info("This time server.port={} | management.port={} | dubbo.port = {}", availablePorts[0], availablePorts[1], availablePorts[2]);
+            
+            log.info("This time server.port={} | dubbo.port = {}", availablePorts[0], availablePorts[1]);
             final PropertySource<?> apolloSource = environment.getPropertySources().get(PropertySourcesConstants.APOLLO_BOOTSTRAP_PROPERTY_SOURCE_NAME);
             if (apolloSource instanceof CompositePropertySource) {
                 ((CompositePropertySource) apolloSource).addFirstPropertySource(new MapPropertySource(PlatformConstants.BOOTSTRAP_PROPERTY_SOURCE_NAME, ImmutableMap.of(
-                        "server.port", availablePorts[0], "management.port", availablePorts[1], "dubbo.port", availablePorts[2])));
+                        "server.port", availablePorts[0], "dubbo.port", availablePorts[1])));
             }
             StartupConstants.SERVER_PORT = availablePorts[0];
-            StartupConstants.DUBBO_PORT = availablePorts[2];
+            StartupConstants.DUBBO_PORT = availablePorts[1];
         } else {
             //测试时候使用
             log.info("Start Initializer Config env = {}, idc = {}", env, idc);

@@ -1,23 +1,30 @@
 package net.dloud.platform.parse.module;
 
+import com.alibaba.dubbo.config.annotation.Reference;
 import com.alibaba.dubbo.rpc.RpcContext;
 import com.alibaba.dubbo.rpc.RpcException;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
+import net.dloud.platform.common.client.GatewayService;
+import net.dloud.platform.common.domain.entry.GroupEntry;
+import net.dloud.platform.common.domain.result.GatewayMethodResult;
 import net.dloud.platform.common.extend.StringUtil;
 import net.dloud.platform.common.gateway.bean.ApiRequest;
 import net.dloud.platform.common.gateway.bean.ApiResponse;
 import net.dloud.platform.common.gateway.bean.InvokeRequest;
 import net.dloud.platform.extend.constant.PlatformConstants;
 import net.dloud.platform.extend.constant.PlatformExceptionEnum;
+import net.dloud.platform.extend.constant.StartupConstants;
 import net.dloud.platform.extend.exception.InnerException;
 import net.dloud.platform.extend.exception.PassedException;
 import net.dloud.platform.extend.exception.RefundException;
 import net.dloud.platform.extend.tuple.PairTuple;
 import net.dloud.platform.extend.tuple.ThirdTuple;
 import net.dloud.platform.extend.wrapper.AssertWrapper;
+import net.dloud.platform.parse.initial.InitGateway;
 import net.dloud.platform.parse.utils.AopTargetUtil;
 import net.dloud.platform.parse.utils.ApiTestUtil;
+import net.dloud.platform.parse.utils.ResourceGet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
@@ -29,6 +36,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
@@ -52,7 +60,6 @@ import java.util.stream.Collectors;
 @CrossOrigin
 @RestController
 @RequestMapping("/run")
-@ConditionalOnProperty(value = "run.mode", havingValue = "dev")
 public class GatewayController {
     private static final ParameterNameDiscoverer discoverer = new LocalVariableTableParameterNameDiscoverer();
     /**
@@ -70,6 +77,22 @@ public class GatewayController {
     @Autowired
     private ApplicationContext context;
 
+    @Reference
+    private GatewayService gateway;
+
+
+    @PostMapping("/gateway")
+    public Mono<String> invoke(Boolean type) {
+        return Mono.fromSupplier(() -> {
+            final Boolean isNew = null == type ? Boolean.FALSE : type;
+            final GroupEntry groupInfo = new GroupEntry(PlatformConstants.APPID, PlatformConstants.APPNAME, PlatformConstants.MODE,
+                    PlatformConstants.GROUP, PlatformConstants.LOCAL_HOST_IP + ":" + StartupConstants.SERVER_PORT, "");
+
+            final byte[] index = ResourceGet.resourceFile2Byte(InitGateway.PARSE_PATH + "index");
+            final GatewayMethodResult result = gateway.clazzInfo(groupInfo, isNew, index);
+            return result.getCode();
+        });
+    }
 
     @PostMapping("/api")
     public ApiResponse invoke(@RequestBody InvokeRequest request) {

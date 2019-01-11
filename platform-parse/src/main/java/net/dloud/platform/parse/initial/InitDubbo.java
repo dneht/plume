@@ -74,7 +74,7 @@ public class InitDubbo {
         final DubboSetting.Provider provider = dubboSetting.getProvider();
         ProviderConfig providerConfig = new ProviderConfig();
         if (RunHost.canUseDomain(RunHost.localHost, provider.getHost())) {
-            providerConfig.setHost(provider.getHost());
+            providerConfig.setHost(RunHost.localHost.getHostName());
         }
         providerConfig.setThreads(provider.getThreads());
         providerConfig.setTimeout(provider.getTimeout());

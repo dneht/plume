@@ -58,7 +58,7 @@ public class SoftLoadBalanceImpl implements LoadBalance {
         Set<String> availableProvider = null;
         //当前分组和输入分组相同则直接从util中取值，否则从context中取值
         if (isSame) {
-            availableProvider = dubboProvider.get(thisGroup);
+            availableProvider = dubboProvider.get(thisGroup).keySet();
         } else {
             String handGroup = RpcContext.getContext().getAttachment(PlatformConstants.HANDGROUP_KEY);
             if (null != handGroup) {
@@ -76,7 +76,7 @@ public class SoftLoadBalanceImpl implements LoadBalance {
         if (CollectionUtil.isEmpty(availableProvider)) {
             log.info("[PLATFORM] 路由[DUBBO]服务: {}, 输入分组[{}]无可用服务，调用当前服务分组[{}]", methodName, thisGroup, PlatformConstants.GROUP);
             thisGroup = PlatformConstants.GROUP;
-            availableProvider = dubboProvider.get(PlatformConstants.GROUP);
+            availableProvider = dubboProvider.get(PlatformConstants.GROUP).keySet();
         }
 
         if (CollectionUtil.isEmpty(availableProvider)) {

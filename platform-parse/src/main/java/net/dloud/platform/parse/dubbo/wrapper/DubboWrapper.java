@@ -2,16 +2,21 @@ package net.dloud.platform.parse.dubbo.wrapper;
 
 import com.alibaba.dubbo.common.utils.ConcurrentHashSet;
 import lombok.extern.slf4j.Slf4j;
+import net.dloud.platform.common.gateway.bean.StartupTime;
+import net.dloud.platform.common.serialize.KryoBaseUtil;
 import net.dloud.platform.extend.constant.PlatformConstants;
 import net.dloud.platform.extend.constant.StartupConstants;
 import net.dloud.platform.extend.tuple.PairTuple;
 import net.dloud.platform.parse.curator.wrapper.CuratorWrapper;
+import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
+import org.apache.zookeeper.data.Stat;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author QuDasheng
@@ -21,8 +26,10 @@ import java.util.Set;
 public class DubboWrapper {
     public static final String DUBBO_ZK_PATH = "/dubbo_group";
     public static final String DUBBO_GROUP_PATH = DUBBO_ZK_PATH + "/" + PlatformConstants.GROUP;
+    public static Map<String, Map<String, StartupTime>> dubboProvider = new HashMap<>();
+
     private static final String DEFAULT_SPLIT = " || ";
-    public static Map<String, Set<String>> dubboProvider = new HashMap<>();
+
 
     public static String currentPath() {
         return DUBBO_GROUP_PATH + "/" + CuratorWrapper.currentPath(PlatformConstants.HOST, StartupConstants.DUBBO_PORT);
@@ -56,8 +63,8 @@ public class DubboWrapper {
     }
 
     public static PathChildrenCacheListener dubboListener(String group, String basePath) {
-        final Set<String> availableProvider = dubboProvider.getOrDefault(group, new ConcurrentHashSet<>());
-        if (!availableProvider.contains(group)) {
+        final Map<String, StartupTime> availableProvider = dubboProvider.getOrDefault(group, new ConcurrentHashMap<>());
+        if (!dubboProvider.containsKey(group)) {
             dubboProvider.put(group, availableProvider);
         }
 
@@ -69,11 +76,16 @@ public class DubboWrapper {
                     break;
                 case CHILD_ADDED:
                     final String add = data.getPath().replaceFirst(basePath + "/", "");
-                    availableProvider.add(add);
+                    availableProvider.put(add, KryoBaseUtil.readObjectFromByteArray(client.getData().forPath(data.getPath()), StartupTime.class));
                     log.info("[PLATFORM] 节点[{}]加入GROUP[{}]", add, group);
                     break;
                 case CHILD_REMOVED:
                     final String del = data.getPath().replaceFirst(basePath + "/", "");
+                    final Stat stat = client.getState() == CuratorFrameworkState.STARTED ? client.checkExists().forPath(data.getPath()) : null;
+                    if (null != stat) {
+                        availableProvider.remove(del);
+                        log.info("[PLATFORM] 节点[{}]移出GROUP[{}]", del, group);
+                    }
                     log.info("[PLATFORM] 节点[{}]移出GROUP[{}]", del, group);
                     break;
                 default:

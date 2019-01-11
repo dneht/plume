@@ -32,6 +32,7 @@ public class EurekaConfigBean extends EurekaInstanceConfigBean {
     public void setPreferIpAddress(boolean preferIpAddress) {
         // getHostname() 不能使用
         if (RunHost.canUseDomain(RunHost.localHost, hostname)) {
+            super.setHostname(RunHost.localHost.getHostName());
             super.setPreferIpAddress(false);
         } else {
             super.setPreferIpAddress(true);

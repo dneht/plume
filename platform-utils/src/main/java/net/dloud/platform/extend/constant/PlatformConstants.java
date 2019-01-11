@@ -18,6 +18,8 @@ public class PlatformConstants {
 
     public static final int APPID = CONFIG.getIntProperty("app.id", 0);
 
+    public static final String APPKEY = CONFIG.getProperty("app.key", "error").toLowerCase();
+
     public static final String APPNAME = CONFIG.getProperty("app.name", "");
 
     public static final String DEFAULT_GROUP = "stable";

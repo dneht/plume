@@ -22,8 +22,8 @@ import net.dloud.platform.extend.exception.RefundException;
 import net.dloud.platform.extend.wrapper.AssertWrapper;
 import net.dloud.platform.gateway.bean.InvokeCache;
 import net.dloud.platform.gateway.bean.InvokeDetailCache;
+import net.dloud.platform.gateway.pack.MethodResultCache;
 import net.dloud.platform.gateway.pack.GatewayCache;
-import net.dloud.platform.gateway.pack.MethodCache;
 import net.dloud.platform.gateway.util.ExceptionUtil;
 import net.dloud.platform.gateway.util.LimitUtil;
 import net.dloud.platform.gateway.util.ResultWrapper;
@@ -72,10 +72,10 @@ public class CustomRouterFunction {
     private CurrentLimit currentLimit;
 
     @Autowired
-    private MethodCache methodCache;
+    private GatewayCache gatewayCache;
 
     @Autowired
-    private GatewayCache gatewayCache;
+    private MethodResultCache methodResultCache;
 
 
     /**
@@ -166,7 +166,7 @@ public class CustomRouterFunction {
         log.info("[GATEWAY] 来源: {} | 分组: {} | 调用方法: {} | 输入参数: {} | 凭证: {}",
                 inputTenant, inputGroup, invokeNames, inputParams, proof);
         AssertWrapper.isTrue(null != inputTenant && null != inputGroup, "调用方法输入错误!");
-        methodCache.setRpcContext(inputTenant, inputGroup, proof);
+        gatewayCache.setRpcContext(inputTenant, inputGroup, proof);
 
         int i = -1;
         int size = invokeNames.size();
@@ -198,10 +198,10 @@ public class CustomRouterFunction {
                 final String needKey = invokeName + methodSplit + inputParam.size();
                 final Integer cacheTime = needs.getOrDefault(needKey, 0);
                 if (cacheTime > 0) {
-                    final Object value = gatewayCache.getValue(needKey, inputParam, inputTenant, inputGroup);
+                    final Object value = methodResultCache.getValue(needKey, inputParam, inputTenant, inputGroup);
                     if (null == value) {
                         final Object result = doResult(request, invokeName, inputParam, memberInfo, invokeDetailCache);
-                        gatewayCache.setValue(needKey, inputParam, inputTenant, inputGroup, result, cacheTime);
+                        methodResultCache.setValue(needKey, inputParam, inputTenant, inputGroup, result, cacheTime);
                         results.add(result);
                     } else {
                         results.add(value);
@@ -254,7 +254,7 @@ public class CustomRouterFunction {
     }
 
     private Map<String, Object> doMember(String inputTenant, String inoutGroup, InvokeCache paramCache, String token) {
-        Map<String, Object> memberInfo = methodCache.tokenCache(new TokenKey(token, inputTenant, inoutGroup, paramCache.getInvokeName()));
+        Map<String, Object> memberInfo = gatewayCache.tokenCache(new TokenKey(token, inputTenant, inoutGroup, paramCache.getInvokeName()));
         if (!paramCache.isWhitelist()) {
             if (StringUtil.isBlank(token)) {
                 throw new RefundException(PlatformExceptionEnum.LOGIN_NONE);
@@ -284,7 +284,7 @@ public class CustomRouterFunction {
             }
 
             //获取缓存的数据
-            final InvokeDetailCache invokeDetail = methodCache.invokeCache(new InvokeKey(inputGroup, invokeName, paramSize));
+            final InvokeDetailCache invokeDetail = gatewayCache.invokeCache(new InvokeKey(inputGroup, invokeName, paramSize));
             if (whitelist && !invokeDetail.getWhitelist()) {
                 log.info("[GATEWAY] 方法 {} 没有设置白名单", invokeName);
                 whitelist = false;

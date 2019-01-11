@@ -27,7 +27,7 @@ import java.util.List;
 @ConditionalOnProperty(name = "gateway.notice.enable", matchIfMissing = true, havingValue = "true")
 @AutoConfigureAfter(InitSource.class)
 public class InitGateway {
-    private static final String PARSE_PATH = PlatformConstants.PARSE_BASE_PATH + PlatformConstants.APPID + "/";
+    public static final String PARSE_PATH = PlatformConstants.PARSE_BASE_PATH + PlatformConstants.APPID + "/";
 
     @Reference
     private GatewayService gateway;

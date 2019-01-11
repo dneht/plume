@@ -364,13 +364,11 @@ public class GatewayServiceImpl implements GatewayService {
         //删除网关中的缓存
         try {
             if (!methodList.isEmpty()) {
-                final List<InvokeKey> invokeList = Lists.newArrayListWithExpectedSize(methodList.size());
                 for (InfoMethodEntity method : methodList) {
                     final InvokeKey invokeKey = new InvokeKey(method.getGroupName(), method.getInvokeName(), method.getInvokeLength());
-                    assistComponent.publish(CenterEnum.GATEWAY_CENTER, invokeKey);
-                    invokeList.add(invokeKey);
+                    final long num = assistComponent.publish(CenterEnum.GATEWAY_CENTER, invokeKey);
+                    log.info("[GATEWAY] 要删除网关中的缓存是: {}, 通知到的服务数={}", invokeKey, num);
                 }
-                log.info("[GATEWAY] 要删除的网关中的缓存: {}", invokeList);
             }
         } catch (Exception e) {
             log.warn("[GATEWAY] 删除网关中的缓存失败: ", e);

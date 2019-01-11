@@ -8,6 +8,7 @@ import net.dloud.platform.common.extend.CollectionUtil;
 import net.dloud.platform.common.extend.StringUtil;
 import net.dloud.platform.common.gateway.InjectEnum;
 import net.dloud.platform.common.gateway.bean.ApiResponse;
+import net.dloud.platform.common.gateway.bean.StartupTime;
 import net.dloud.platform.common.gateway.info.CommentInfo;
 import net.dloud.platform.common.gateway.info.FieldDetailInfo;
 import net.dloud.platform.common.gateway.info.GenericSimpleInfo;
@@ -70,7 +71,7 @@ public class InfoApi {
     private InfoComponent infoComponent;
 
     @RequestMapping(value = "/dubbo_provider")
-    public Mono<Map<String, Set<String>>> dubbo_provider() {
+    public Mono<Map<String, Map<String, StartupTime>>> dubbo_provider() {
         return Mono.just(DubboWrapper.dubboProvider);
     }
 

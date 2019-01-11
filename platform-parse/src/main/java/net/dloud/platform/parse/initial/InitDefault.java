@@ -39,6 +39,7 @@ public class InitDefault {
     public ThreadPoolTaskScheduler taskScheduler() {
         final ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
         taskScheduler.setPoolSize(PlatformConstants.PROCESSOR_NUMBER * 2);
+        taskScheduler.setWaitForTasksToCompleteOnShutdown(true);
         taskScheduler.initialize();
         return taskScheduler;
     }

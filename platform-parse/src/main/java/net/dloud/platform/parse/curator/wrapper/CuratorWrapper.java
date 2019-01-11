@@ -4,7 +4,10 @@ import com.alibaba.dubbo.common.utils.ConcurrentHashSet;
 import com.alibaba.dubbo.rpc.RpcContext;
 import lombok.extern.slf4j.Slf4j;
 import net.dloud.platform.common.extend.StringUtil;
+import net.dloud.platform.common.gateway.bean.StartupTime;
+import net.dloud.platform.common.serialize.KryoBaseUtil;
 import net.dloud.platform.extend.constant.PlatformConstants;
+import net.dloud.platform.extend.constant.StartupConstants;
 import net.dloud.platform.extend.exception.InnerException;
 import net.dloud.platform.parse.curator.listener.ListenerExecutor;
 import net.dloud.platform.parse.utils.RunHost;
@@ -28,7 +31,7 @@ import java.util.Set;
 @Slf4j
 public class CuratorWrapper {
     private static CuratorFramework curatorClient;
-
+    private static ConnectionStateListener stateListener;
     private static Set<ListenerExecutor> listenerExecutors;
 
 
@@ -60,27 +63,30 @@ public class CuratorWrapper {
         return curatorClient;
     }
 
-    private static ConnectionStateListener stateListener() {
-        return (client, event) -> {
-            switch (event) {
-                case CONNECTED:
-                    log.info("[{}] 当前正在进行连接...", PlatformConstants.APPNAME);
-                    setListeners();
-                    break;
-                case RECONNECTED:
-                    log.info("[{}] 当前正在进行重连...", PlatformConstants.APPNAME);
-                    setListeners();
-                    break;
-                case SUSPENDED:
-                    log.info("[{}] 当前连接中断...等待重连...", PlatformConstants.APPNAME);
-                    break;
-                case LOST:
-                    log.info("[{}] 当前连接丢失...等待重连...", PlatformConstants.APPNAME);
-                    break;
-                default:
-                    log.info("[{}] 当前连接状态[{}]", PlatformConstants.APPNAME, event);
-            }
-        };
+    public static ConnectionStateListener stateListener() {
+        if (null == stateListener) {
+            stateListener = (client, event) -> {
+                switch (event) {
+                    case CONNECTED:
+                        log.info("[{}] 当前正在进行连接...", PlatformConstants.APPNAME);
+                        setListeners();
+                        break;
+                    case RECONNECTED:
+                        log.info("[{}] 当前正在进行重连...", PlatformConstants.APPNAME);
+                        setListeners();
+                        break;
+                    case SUSPENDED:
+                        log.info("[{}] 当前连接中断...等待重连...", PlatformConstants.APPNAME);
+                        break;
+                    case LOST:
+                        log.info("[{}] 当前连接丢失...等待重连...", PlatformConstants.APPNAME);
+                        break;
+                    default:
+                        log.info("[{}] 当前连接状态[{}]", PlatformConstants.APPNAME, event);
+                }
+            };
+        }
+        return stateListener;
     }
 
     public static void childrenCache(PathChildrenCacheListener cacheListener, String currentPath, String basePath) {
@@ -92,7 +98,9 @@ public class CuratorWrapper {
                     curatorClient.delete().forPath(currentPath);
                 }
                 curatorClient.create().creatingParentContainersIfNeeded().withMode(CreateMode.EPHEMERAL)
-                        .forPath(currentPath, PlatformConstants.APPNAME.getBytes());
+                        .forPath(currentPath, KryoBaseUtil.writeObjectToByteArray(new StartupTime(
+                                PlatformConstants.APPID, PlatformConstants.APPKEY,
+                                StartupConstants.SERVER_PORT, StartupConstants.DUBBO_PORT)));
             }
             PathChildrenCache cache = new PathChildrenCache(curatorClient, basePath, false);
             cache.start();

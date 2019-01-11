@@ -7,7 +7,7 @@
     <groupId>net.dloud.mimiron</groupId>
     <artifactId>mimiron</artifactId>
     <packaging>pom</packaging>
-    <version>0.5.1.0</version>
+    <version>0.5.2.0</version>
 
     <name>Mimiron</name>
     <description>a simple dubbo gateway and platform</description>
@@ -43,6 +43,7 @@
         <module>common-client</module>
         <module>common-utils</module>
         <module>platform-utils</module>
+        <module>platform-actuator</module>
         <module>platform-dal</module>
         <module>platform-center</module>
         <module>platform-parse</module>
@@ -126,6 +127,11 @@
             <dependency>
                 <groupId>net.dloud.mimiron</groupId>
                 <artifactId>platform-utils</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.dloud.mimiron</groupId>
+                <artifactId>platform-actuator</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -727,6 +733,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
