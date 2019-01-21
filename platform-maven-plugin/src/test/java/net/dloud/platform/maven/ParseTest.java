@@ -25,7 +25,7 @@ public class ParseTest {
                 "net.dloud.platform.common.annotation.Enquire",
                 false, new HashSet<>(), new HashSet<>());
 
-        String path = "/Users/dor/Projects/now/platform-all/common-client/src/main/java/net/dloud/platform/common/client/GatewayService.java";
+        String path = "platform-maven-plugin/src/test/java/net/dloud/platform/maven/client/TestEntry.java";
         File file = Paths.get(path).toFile();
         final int length = (int) file.length();
         char[] chars = new char[length];

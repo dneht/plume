@@ -30,8 +30,13 @@ public class ResultWrapper {
     }
 
     public static ApiResponse err(PassedException ex) {
+        final ApiResponse response = new ApiResponse();
+        err(response, ex);
+        return response;
+    }
+
+    public static void err(ApiResponse response, PassedException ex) {
         if (null == ex.getEnum()) {
-            final ApiResponse response = new ApiResponse();
             response.setCode(1);
             response.setMessage(ex.getMessage());
             String code = ex.getCode();
@@ -43,15 +48,19 @@ public class ResultWrapper {
                 response.setProof(UUID.randomUUID().toString());
             }
             response.setPreload(new BaseResult(code));
-            return response;
         } else {
-            return new ApiResponse(ex.getEnum());
+            response.exception(ex);
         }
     }
 
     public static ApiResponse err(RefundException ex) {
+        final ApiResponse response = new ApiResponse();
+        err(response, ex);
+        return response;
+    }
+
+    public static void err(ApiResponse response, RefundException ex) {
         if (null == ex.getEnum()) {
-            final ApiResponse response = new ApiResponse();
             response.setCode(-1);
             response.setMessage(ex.getMessage());
             String code = ex.getCode();
@@ -63,9 +72,8 @@ public class ResultWrapper {
                 response.setProof(UUID.randomUUID().toString());
             }
             response.setPreload(new BaseResult(code));
-            return response;
         } else {
-            return new ApiResponse(-1, ex.getEnum());
+            response.exception(-1, ex);
         }
     }
 

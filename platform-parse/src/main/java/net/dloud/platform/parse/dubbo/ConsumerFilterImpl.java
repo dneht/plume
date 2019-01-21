@@ -2,6 +2,7 @@ package net.dloud.platform.parse.dubbo;
 
 import com.alibaba.dubbo.common.Constants;
 import com.alibaba.dubbo.common.extension.Activate;
+import com.alibaba.dubbo.common.utils.NetUtils;
 import com.alibaba.dubbo.rpc.Filter;
 import com.alibaba.dubbo.rpc.Invocation;
 import com.alibaba.dubbo.rpc.Invoker;
@@ -28,14 +29,21 @@ import java.util.Map;
  * @create 2018-09-02 13:08
  **/
 @Slf4j
-@Activate(group = Constants.CONSUMER, value = "consumerFilter", order = 1000)
+@Activate(group = Constants.CONSUMER, value = "consumerFilter", order = -40000)
 public class ConsumerFilterImpl implements Filter {
 
     @Override
     @SuppressWarnings("unchecked")
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
-        log.info("[{}] 消费[DUBBO]服务: 方法名: {}, 附加参数: {}", PlatformConstants.APPNAME,
-                invocation.getMethodName(), invocation.getAttachments());
+        final String tenant = RpcContext.getContext().getAttachment(PlatformConstants.FROM_KEY);
+        log.info("[{}] 消费[DUBBO]服务: 来源: {}, 方法名: {}, 附加参数: {}", PlatformConstants.APPNAME,
+                tenant, invocation.getMethodName(), invocation.getAttachments());
+        RpcContext.getContext()
+                .setInvoker(invoker)
+                .setInvocation(invocation)
+                .setLocalAddress(NetUtils.getLocalHost(), 0)
+                .setRemoteAddress(invoker.getUrl().getHost(),
+                        invoker.getUrl().getPort());
         if (invocation instanceof RpcInvocation) {
             ((RpcInvocation) invocation).setInvoker(invoker);
         }
@@ -79,6 +87,7 @@ public class ConsumerFilterImpl implements Filter {
                     }
                 }
             }
+            RpcContext.getServerContext().setAttachments(invoke.getAttachments());
             return invoke;
         } catch (RpcException ex) {
             log.warn("[DUBBO] 调用出现已知异常: {}, {}, {}", ex.getCode(), ex.getMessage(), ex.getLocalizedMessage());
@@ -99,6 +108,9 @@ public class ConsumerFilterImpl implements Filter {
         } catch (Exception ex) {
             log.error("[DUBBO] 调用未知异常: ", ex);
             throw new InnerException(ex.getMessage(), ex.getCause());
+        } finally {
+            RpcContext.getContext().clearAttachments();
+            RpcContext.getContext().setAttachment(PlatformConstants.FROM_KEY, tenant);
         }
     }
 }

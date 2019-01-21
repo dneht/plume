@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import net.dloud.platform.common.annotation.Transient;
 
 /**
  * 用户详情
@@ -15,9 +16,20 @@ import lombok.ToString;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = true)
-public class MemberInfo extends MemberIdInfo {
+public class MemberInfo {
+    @Transient
+    private static MemberInfo empty;
+
+    /**
+     * 用户id
+     */
+    private Long userId;
+
+    /**
+     * 等级
+     */
+    private Integer level;
+
     /**
      * 用户昵称
      */
@@ -42,4 +54,12 @@ public class MemberInfo extends MemberIdInfo {
      * 城市
      */
     private String city;
+
+
+    public static MemberInfo empty() {
+        if (null == empty) {
+            empty = new MemberInfo(0L, 0, "", "", (byte) 0, (short) 0, "");
+        }
+        return empty;
+    }
 }

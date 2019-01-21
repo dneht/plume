@@ -27,6 +27,8 @@ public class MapperBuildUtil {
 
     final static String RIGHT_BRACKET = ") ";
 
+    final static String ON_DUPLICATE_VALUE = "values(";
+
     final static int FIELD = 1;
 
     final static int PARAM = 2;
@@ -36,58 +38,6 @@ public class MapperBuildUtil {
     final static int COLUMN = 4;
 
     final static int VALUE = 5;
-
-    static String SELECT = "select ";
-
-    static String INSERT = "insert into ";
-
-    static String MERGE = "merge into ";
-
-    static String UPDATE = "update ";
-
-    static String DELETE = "delete from ";
-
-    static String FROM = " from ";
-
-    static String WHERE = " where ";
-
-    static String VALUES = " values ";
-
-    static String AND = " and ";
-
-    static String SET = " set ";
-
-    static String GROUP_BY = " group by ";
-
-    static String HAVING = " having ";
-
-    static String ORDER_BY = " order by ";
-
-    static String ASC = " asc ";
-
-    static String DESC = " desc ";
-
-    static String LIMIT = " limit ";
-
-    static String UNION = " union ";
-
-    static String UNION_ALL = " union all ";
-
-    static String JOIN = " join ";
-
-    static String LEFT_JOIN = " left join ";
-
-    static String INNER_JOIN = " inner join ";
-
-    static String ON = " on ";
-
-    static String ON_DUPLICATE_UPDATE = " on duplicate key update ";
-
-    static String ON_DUPLICATE_VALUE = "values(";
-
-    static String AND_SOFT_DELETE = "deleted_at is null";
-
-    static String SET_SOFT_DELETE = "deleted_at = now()";
 
 
     static Cache<String, List<MapperFieldInfo>> FIELD_CACHE = Caffeine.newBuilder()
@@ -146,7 +96,7 @@ public class MapperBuildUtil {
     static String listString(List<MapperFieldInfo> list, int type, Set<String> set, int only) {
         if (null != set && !set.isEmpty()) {
             list = new ArrayList<>(list);
-            for (Iterator<MapperFieldInfo> it = list.iterator(); it.hasNext(); ) {
+            for (Iterator<MapperFieldInfo> it = list.iterator(); it.hasNext();) {
                 final MapperFieldInfo info = it.next();
                 final String fieldName = info.getFieldName();
 

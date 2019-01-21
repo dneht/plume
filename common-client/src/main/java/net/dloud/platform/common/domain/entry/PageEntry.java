@@ -50,6 +50,19 @@ public class PageEntry extends BaseEntry {
         return entry;
     }
 
+    public static PageEntry format(PageEntry origin) {
+        if (null == origin) {
+            return new PageEntry();
+        }
+        if (null == origin.getPageNum() || origin.getPageNum() <= 0) {
+            origin.setPageNum(1);
+        }
+        if (null == origin.getPageSize() || origin.getPageSize() <= 0) {
+            origin.setPageSize(10);
+        }
+        return origin;
+    }
+
     public Integer getPageSize() {
         if (null == pageSize) {
             return 10;

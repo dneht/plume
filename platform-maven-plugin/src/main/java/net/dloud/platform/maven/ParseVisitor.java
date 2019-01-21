@@ -313,6 +313,15 @@ public class ParseVisitor extends ASTVisitor {
     public boolean visit(FieldDeclaration node) {
         if (parseType == 2) {
             final ClassInfo sourceInfo = infoStack.pop();
+            final List modifiers = node.modifiers();
+            if (null != modifiers && !modifiers.isEmpty()) {
+                for (Object modifier: modifiers) {
+                    if (null != modifier && "static".equals(String.valueOf(modifier).trim())) {
+                        return true;
+                    }
+                }
+            }
+
             if (sourceInfo.getIfMember()) {
                 prefixName = sourceInfo.getQualifiedName();
             }
@@ -325,7 +334,7 @@ public class ParseVisitor extends ASTVisitor {
             final TypeVisitor fieldTypeVisitor = new TypeVisitor();
             node.getType().accept(fieldTypeVisitor);
             final TypeInfo typeInfo = fieldTypeVisitor.getTypeInfo();
-            final AnnotationInfoTuple annotationInfoTuple = annotationInfo(node.modifiers());
+            final AnnotationInfoTuple annotationInfoTuple = annotationInfo(modifiers);
             final CommentInfo commentInfo = commentInfo(node.getJavadoc());
             for (Object one : node.fragments()) {
                 final VariableDeclarationFragment variable = (VariableDeclarationFragment) one;

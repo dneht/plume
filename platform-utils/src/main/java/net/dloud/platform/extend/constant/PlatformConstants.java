@@ -64,6 +64,9 @@ public class PlatformConstants {
     public static final String SOURCE_ELASTIC = "elastic";
     public static final String SOURCE_DRUID = "druid";
 
+
+    public static final int CORRECT_CODE = 0;
+
     public static final String FROM_KEY = "tenant";
 
     public static final String GROUP_KEY = "group";

@@ -12,9 +12,7 @@ import net.dloud.platform.dal.entity.InfoMethodGateway;
 import net.dloud.platform.dal.entity.InfoMethodSimple;
 import net.dloud.platform.dal.entity.InfoMethodVersion;
 import org.jdbi.v3.core.Handle;
-import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.PreparedBatch;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -127,10 +125,9 @@ public class InfoComponent implements MapperComponent {
      * 批量更新相同的类
      */
     private final String upsertSelectClazzSql = upsertSelect(INFO_CLAZZ, columnsRemove(InfoClazzEntity.class, keys(DELETED_AT)),
-            INFO_CLAZZ, ":newGroup, " + columnsBaseRemove(InfoClazzEntity.class, keys("groupName")) + ", now(), now()",
-            valuesRemove(InfoClazzEntity.class, keys(DELETED_AT)),
-            "group_name = :oldGroup", "system_id = :systemId", "full_name IN (<fullNames>)")
-            .build();
+            select(INFO_CLAZZ, ":newGroup, " + columnsBaseRemove(InfoClazzEntity.class, keys("groupName")) + ", now(), now()")
+                    .where("group_name = :oldGroup", "system_id = :systemId", "full_name IN (<fullNames>)"),
+            valuesRemove(InfoClazzEntity.class, keys(DELETED_AT))).build();
 
     /**
      * 批量插入或更新类
@@ -139,13 +136,15 @@ public class InfoComponent implements MapperComponent {
             params(InfoClazzEntity.class), valuesBaseRemove(InfoClazzEntity.class, keys("groupName", "fullName", CREATED_AT))).build();
     private final String batchDeleteClazzSql = delete(INFO_CLAZZ)
             .where("group_name = :groupName", "full_name IN (<clazzNames>)").build();
+
     /**
      * 批量更新相同的方法
      */
     private final String upsertSelectMethodSql = upsertSelect(INFO_METHOD, columnsRemove(InfoMethodEntity.class, keys(DELETED_AT)),
-            INFO_METHOD, ":newGroup, " + columnsBaseRemove((InfoMethodEntity.class), keys("groupName")) + ", now(), now()",
-            valuesRemove(InfoMethodEntity.class, keys(DELETED_AT)),
-            "group_name = :oldGroup", "system_id = :systemId", "clazz_name IN (<clazzNames>)").build();
+            select(INFO_METHOD, ":newGroup, " + columnsBaseRemove((InfoMethodEntity.class), keys("groupName")) + ", now(), now()")
+                    .where("group_name = :oldGroup", "system_id = :systemId", "clazz_name IN (<clazzNames>)"),
+            valuesRemove(InfoMethodEntity.class, keys(DELETED_AT))).build();
+
     /**
      * 批量插入或更新方法
      */

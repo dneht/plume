@@ -9,4 +9,4 @@ fi
 
 echo "==== start watch project info log ===="
 
-tail -f /web/$WEB_DIR/logs/$APP_ID/info.log
+tail -f /web/$WEB_DIR/logs/info.log

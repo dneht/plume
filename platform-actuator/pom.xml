@@ -5,7 +5,7 @@
     <parent>
         <artifactId>mimiron</artifactId>
         <groupId>net.dloud.mimiron</groupId>
-        <version>0.5.2.0</version>
+        <version>0.6.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 

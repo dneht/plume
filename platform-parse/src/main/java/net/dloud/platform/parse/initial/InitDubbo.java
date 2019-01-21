@@ -101,7 +101,7 @@ public class InitDubbo {
             consumerConfig.setCache(consumer.getCache());
         }
         consumerConfig.setAsync(consumer.getAsync());
-        consumerConfig.setFilter("consumerFilter");
+        consumerConfig.setFilter("consumerFilter,-consumercontext");
         consumerConfig.setLazy(true);
         return consumerConfig;
     }

@@ -170,6 +170,7 @@ public class InfoApi {
 
 
                     //开始处理参数
+                    final String thisClazzName = methodDetail.getClazzName();
                     Set<String> clazzNames = Sets.newHashSet(methodDetail.getClazzName());
                     final byte[] parameterBytes = methodDetail.getParameterInfo();
                     List<FieldDetailInfo> parameterInfo = null;
@@ -213,7 +214,7 @@ public class InfoApi {
                                     });
                                 }
                                 if (injectionNames.isEmpty()) {
-                                    parameterInfo.forEach(parameterOne -> clazzType(parameterOne, refClazzField));
+                                    parameterInfo.forEach(parameterOne -> clazzType(thisClazzName, parameterOne, refClazzField));
                                 } else {
                                     parameterInfo = parameterInfo.stream().filter(one -> {
                                         final String fieldName = one.getFieldName();
@@ -225,12 +226,12 @@ public class InfoApi {
                                         one.setEnquire(enquire);
                                         return !enquire;
                                     }).collect(Collectors.toList());
-                                    parameterInfo.forEach(parameterOne -> clazzType(parameterOne, refClazzField));
+                                    parameterInfo.forEach(parameterOne -> clazzType(thisClazzName, parameterOne, refClazzField));
                                 }
                                 map.put("parameterInfo", parameterInfo);
                             }
                             if (null != returnInfo) {
-                                clazzType(returnInfo, refClazzField);
+                                clazzType(thisClazzName, returnInfo, refClazzField);
                                 map.put("returnInfo", returnInfo);
                             }
                         } else {
@@ -358,7 +359,7 @@ public class InfoApi {
     /**
      * 设置子类类型
      */
-    private void clazzType(FieldDetailInfo fieldDetailInfo, Map<String, Optional<InfoClazzField>> classFieldMap) {
+    private void clazzType(String thisClazzName, FieldDetailInfo fieldDetailInfo, Map<String, Optional<InfoClazzField>> classFieldMap) {
         if (null == fieldDetailInfo || null == fieldDetailInfo.getFieldName() || null == fieldDetailInfo.getSimpleTypeName()) {
             return;
         }
@@ -368,6 +369,11 @@ public class InfoApi {
         }
         if (fieldDetailInfo.getGenericTypeDepth() <= 0 && InnerTypeUtil.isJavaType(fieldDetailInfo.getFullTypeName())) {
             fieldDetailInfo.setInnerType(true);
+            return;
+        }
+
+        if (null != thisClazzName && thisClazzName.equals(fieldDetailInfo.getFullTypeName())) {
+            fieldDetailInfo.setSimpleComment("结构等同于外部结构: " + fieldDetailInfo.getSimpleTypeName() + "，不做解析");
             return;
         }
 
@@ -393,20 +399,19 @@ public class InfoApi {
             //合并父类字段
             mergeSuperField(fieldDetailInfo, classFieldMap, oneClazzField);
             //替换泛型信息
-            replaceFieldGeneric(fieldDetailInfo, classFieldMap, oneClazzField);
-
+            replaceGenericField(fieldDetailInfo, classFieldMap, oneClazzField);
         } else {
             //如果为内部容器，检测泛型并只展示第一个不是内部类型的类型，最多处理两级
             if (fieldDetailInfo.getGenericTypeDepth() > 0 && null != fieldDetailInfo.getGenericTypeName()) {
                 for (GenericSimpleInfo genericType : fieldDetailInfo.getGenericTypeName()) {
-                    if (genericClazzField(fieldDetailInfo, classFieldMap, genericType)) {
+                    if (genericClazzField(genericType.getTypeName(), fieldDetailInfo, classFieldMap, genericType)) {
                         break;
                     }
 
                     final List<GenericSimpleInfo> genericSubType = genericType.getSubTypeName();
                     if (CollectionUtil.notEmpty(genericSubType)) {
                         for (GenericSimpleInfo genericSubTypeInfo : genericSubType) {
-                            if (genericClazzField(fieldDetailInfo, classFieldMap, genericSubTypeInfo)) {
+                            if (genericClazzField(genericSubTypeInfo.getTypeName(), fieldDetailInfo, classFieldMap, genericSubTypeInfo)) {
                                 break;
                             }
                         }
@@ -421,9 +426,12 @@ public class InfoApi {
      * 更新或者设置字段
      */
     private List<FieldDetailInfo> upsertFieldList(FieldDetailInfo fieldDetailInfo, InfoClazzField subClazzField) {
-        List<FieldDetailInfo> subClazzInfo = decodeColumn(subClazzField.getFieldInfo());
+        //获取要合并的类信息
+        final List<FieldDetailInfo> subClazzInfo = null == subClazzField.getFieldInfo() ?
+                Lists.newArrayList() : decodeColumn(subClazzField.getFieldInfo());
+
         List<FieldDetailInfo> fieldDetailList = fieldDetailInfo.getFieldList();
-        if (null == fieldDetailList) {
+        if (CollectionUtil.isEmpty(fieldDetailList)) {
             fieldDetailList = subClazzInfo;
         } else {
             fieldDetailList.addAll(subClazzInfo);
@@ -441,45 +449,46 @@ public class InfoApi {
      */
     private void mergeSuperField(FieldDetailInfo fieldDetailInfo, Map<String, Optional<InfoClazzField>> classFieldMap,
                                  InfoClazzField oneClazzField) {
-        List<FieldDetailInfo> superClazzInfo = null;
         if (null != oneClazzField.getSuperclassInfo()) {
-            final Set<String> superclassInfo = decodeColumn(oneClazzField.getSuperclassInfo());
-            for (String superclass : superclassInfo) {
+            final Set<String> superclasses = decodeColumn(oneClazzField.getSuperclassInfo());
+            //遍历父类集合，全名
+            for (String superclass : superclasses) {
                 Optional<InfoClazzField> optionSuperClazzField = classFieldMap.getOrDefault(superclass, Optional.empty());
                 if (optionSuperClazzField.isPresent()) {
                     final InfoClazzField superClazzField = optionSuperClazzField.get();
                     if (null != superClazzField.getFieldInfo()) {
-                        superClazzInfo = upsertFieldList(fieldDetailInfo, superClazzField);
+                        final List<FieldDetailInfo> superClazzInfo = upsertFieldList(fieldDetailInfo, superClazzField);
+                        //处理父类相关字段
+                        if (CollectionUtil.notEmpty(superClazzInfo)) {
+                            superClazzInfo.forEach(one -> clazzType(superclass, one, classFieldMap));
+                        }
                     }
                 }
             }
-        }
-        if (CollectionUtil.notEmpty(superClazzInfo)) {
-            superClazzInfo.forEach(one -> clazzType(one, classFieldMap));
         }
     }
 
     /**
      * 替换泛型信息
      */
-    private void replaceFieldGeneric(FieldDetailInfo fieldDetailInfo, Map<String, Optional<InfoClazzField>> classFieldMap,
+    private void replaceGenericField(FieldDetailInfo fieldDetailInfo, Map<String, Optional<InfoClazzField>> classFieldMap,
                                      InfoClazzField oneClazzField) {
-        List<FieldDetailInfo> nowClazzInfo = null;
+        final List<FieldDetailInfo> nowClazzInfo = upsertFieldList(fieldDetailInfo, oneClazzField);
+
         if (oneClazzField.getIsGeneric() && null != oneClazzField.getGenericInfo()) {
-            final List<GenericSimpleInfo> genericType = fieldDetailInfo.getGenericTypeName();
-            final List<String> genericList = decodeColumn(oneClazzField.getGenericInfo());
+            final List<GenericSimpleInfo> genericInfoList = fieldDetailInfo.getGenericTypeName();
+            final List<String> genericTypeList = decodeColumn(oneClazzField.getGenericInfo());
 
             //如果是容器设置容器类型
-            if (CollectionUtil.notEmpty(genericType)) {
-                nowClazzInfo = upsertFieldList(fieldDetailInfo, oneClazzField);
+            if (CollectionUtil.notEmpty(genericInfoList)) {
                 //泛型列表与参数泛型类型长度相等
                 final int size = nowClazzInfo.size();
                 for (int i = 0; i < size; i++) {
                     final FieldDetailInfo oneDetailInfo = nowClazzInfo.get(i);
                     //存储的类定义范型值与字段类型名做比较
-                    final int index = genericList.indexOf(oneDetailInfo.getSimpleTypeName());
+                    final int index = genericTypeList.indexOf(oneDetailInfo.getSimpleTypeName());
                     if (index >= 0) {
-                        final GenericSimpleInfo oneGenericType = genericType.get(index);
+                        final GenericSimpleInfo oneGenericType = genericInfoList.get(index);
                         final Optional<InfoClazzField> optionClazzInfo = classFieldMap.getOrDefault
                                 (oneGenericType.getTypeName(), Optional.empty());
                         if (optionClazzInfo.isPresent()) {
@@ -498,16 +507,16 @@ public class InfoApi {
                         nowClazzInfo.set(i, oneDetailInfo);
                     } else {
                         //如果当前字段是一个容器，解析内部类型，最多解析两层
-                        final List<GenericSimpleInfo> genericTypeName = oneDetailInfo.getGenericTypeName();
-                        if (oneDetailInfo.getGenericTypeDepth() > 0 && null != genericTypeName) {
+                        final List<GenericSimpleInfo> nowGenericList = oneDetailInfo.getGenericTypeName();
+                        if (oneDetailInfo.getGenericTypeDepth() > 0 && CollectionUtil.notEmpty(nowGenericList)) {
                             boolean innerType = true;
-                            for (GenericSimpleInfo genericSimpleType : genericTypeName) {
+                            for (GenericSimpleInfo genericSimpleType : nowGenericList) {
                                 //存储的类定义范型值与字段类型名做比较
-                                if (!genericClazzField(genericList, genericType, genericSimpleType)) {
+                                if (!genericClazzField(genericTypeList, genericInfoList, genericSimpleType)) {
                                     final List<GenericSimpleInfo> genericSubType = genericSimpleType.getSubTypeName();
                                     if (CollectionUtil.notEmpty(genericSubType)) {
                                         for (GenericSimpleInfo genericSimpleSubType : genericSubType) {
-                                            genericClazzField(genericList, genericSubType, genericSimpleSubType);
+                                            genericClazzField(genericTypeList, genericSubType, genericSimpleSubType);
                                         }
                                     }
                                 }
@@ -518,10 +527,10 @@ public class InfoApi {
                             oneDetailInfo.setInnerType(innerType);
 
                             if (innerType && StringUtil.isBlank(oneDetailInfo.getExtendComment())) {
-                                final int genericSize = genericTypeName.size();
+                                final int genericSize = nowGenericList.size();
                                 StringBuilder comment = new StringBuilder("内部类型是: ");
                                 for (int j = 0; j < genericSize; j++) {
-                                    GenericSimpleInfo typeInfo = genericTypeName.get(i);
+                                    GenericSimpleInfo typeInfo = nowGenericList.get(i);
                                     comment.append(typeInfo.getSimpleName());
                                     if (j < genericSize - 1) {
                                         comment.append(", ");
@@ -537,18 +546,15 @@ public class InfoApi {
             }
         }
 
-        if (null == nowClazzInfo && null != oneClazzField.getFieldInfo()) {
-            nowClazzInfo = upsertFieldList(fieldDetailInfo, oneClazzField);
-        }
         if (CollectionUtil.notEmpty(nowClazzInfo)) {
-            nowClazzInfo.forEach(one -> clazzType(one, classFieldMap));
+            nowClazzInfo.forEach(one -> clazzType(fieldDetailInfo.getFullTypeName(), one, classFieldMap));
         }
     }
 
     /**
      * 容器内部类型处理
      */
-    private boolean genericClazzField(FieldDetailInfo fieldDetailInfo, Map<String, Optional<InfoClazzField>> classFieldMap, GenericSimpleInfo genericType) {
+    private boolean genericClazzField(String thisClazzName, FieldDetailInfo fieldDetailInfo, Map<String, Optional<InfoClazzField>> classFieldMap, GenericSimpleInfo genericType) {
         final Optional<InfoClazzField> optionGenericClazzField = classFieldMap.getOrDefault(genericType.getTypeName(), Optional.empty());
         if (optionGenericClazzField.isPresent()) {
             final InfoClazzField genericClazzField = optionGenericClazzField.get();
@@ -558,7 +564,7 @@ public class InfoApi {
             //处理本身字段
             if (null != genericClazzField.getFieldInfo()) {
                 List<FieldDetailInfo> genericFieldList = upsertFieldList(fieldDetailInfo, genericClazzField);
-                genericFieldList.forEach(one -> clazzType(one, classFieldMap));
+                genericFieldList.forEach(one -> clazzType(thisClazzName, one, classFieldMap));
                 return true;
             }
         }

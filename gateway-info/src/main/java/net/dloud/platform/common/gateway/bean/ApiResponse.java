@@ -52,6 +52,19 @@ public class ApiResponse {
         }
     }
 
+    public ApiResponse(boolean success, String proof) {
+        if (success) {
+            this.code = 0;
+            this.message = "请求成功...";
+            this.proof = proof;
+        } else {
+            this.code = 1;
+            this.message = "请求失败, 请稍后重试...";
+            this.preload = new SimpleResult("101");
+            this.proof = proof;
+        }
+    }
+
     public ApiResponse(BaseExceptionEnum base) {
         this(1, base);
     }
@@ -63,12 +76,30 @@ public class ApiResponse {
     }
 
     public ApiResponse(Exception ex) {
-        this.code = 1;
+        this(1, ex);
+    }
+
+    public ApiResponse(int code, Exception ex) {
+        this.code = code;
         this.message = ex.getMessage();
         this.preload = new SimpleResult("101");
     }
 
-    public ApiResponse(int code, Exception ex) {
+    public void exception(BaseExceptionEnum base) {
+        exception(1, base);
+    }
+
+    public void exception(int code, BaseExceptionEnum base) {
+        this.code = code;
+        this.message = base.getMessage();
+        this.preload = new SimpleResult(base.getCode());
+    }
+
+    public void exception(Exception ex) {
+        exception(1, ex);
+    }
+
+    public void exception(int code, Exception ex) {
         this.code = code;
         this.message = ex.getMessage();
         this.preload = new SimpleResult("101");

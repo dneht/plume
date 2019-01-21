@@ -1,7 +1,5 @@
 package net.dloud.platform.gateway.fork;
 
-import com.alibaba.dubbo.rpc.RpcException;
-import com.alibaba.dubbo.rpc.service.GenericException;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
@@ -16,17 +14,15 @@ import net.dloud.platform.common.gateway.info.InjectionInfo;
 import net.dloud.platform.common.provider.CurrentLimit;
 import net.dloud.platform.extend.constant.PlatformConstants;
 import net.dloud.platform.extend.constant.PlatformExceptionEnum;
-import net.dloud.platform.extend.exception.InnerException;
 import net.dloud.platform.extend.exception.PassedException;
 import net.dloud.platform.extend.exception.RefundException;
 import net.dloud.platform.extend.wrapper.AssertWrapper;
 import net.dloud.platform.gateway.bean.InvokeCache;
 import net.dloud.platform.gateway.bean.InvokeDetailCache;
-import net.dloud.platform.gateway.pack.MethodResultCache;
 import net.dloud.platform.gateway.pack.GatewayCache;
+import net.dloud.platform.gateway.pack.MethodResultCache;
 import net.dloud.platform.gateway.util.ExceptionUtil;
 import net.dloud.platform.gateway.util.LimitUtil;
-import net.dloud.platform.gateway.util.ResultWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,6 +31,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
@@ -43,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.OPTIONS;
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
@@ -116,7 +114,7 @@ public class CustomRouterFunction {
                     }
 
                     final String invokeName = system + "." + clazz + "." + method;
-                    return Mono.just(doApi(request, input.getToken(), input.getTenant(), inputGroup, invokeName, input.getParam()));
+                    return doApi(request, input.getToken(), input.getTenant(), inputGroup, invokeName, input.getParam());
                 }).onErrorResume(ExceptionUtil::handleOne), ApiResponse.class));
     }
 
@@ -136,121 +134,100 @@ public class CustomRouterFunction {
                     AssertWrapper.isTrue(invokeNames.size() > 0, "调用方法名不能为空");
                     AssertWrapper.isTrue(inputParams.size() > 0, "调用方法名不能为空");
                     AssertWrapper.isTrue(invokeNames.size() == inputParams.size(), "调用类型不匹配");
-                    return Mono.just(doApi(request, input.getToken(), input.getTenant(), inputGroup, invokeNames, inputParams));
+                    return doApi(request, input.getToken(), input.getTenant(), inputGroup, invokeNames, inputParams);
                 }).onErrorResume(ExceptionUtil::handleList), ApiResponse.class));
     }
 
     /**
      * 调用单个方法
      */
-    private ApiResponse doApi(ServerRequest request, String token, String inputTenant, String inputGroup,
-                              String invokeName, Map<String, Object> inputParam) {
+    private Mono<ApiResponse> doApi(ServerRequest request, String token, String inputTenant, String inputGroup,
+                                    String invokeName, Map<String, Object> inputParam) {
         return doApi(request, token, inputTenant, inputGroup, Collections.singletonList(invokeName), Collections.singletonList(inputParam), true);
     }
 
     /**
      * 调用多个方法
      */
-    private ApiResponse doApi(ServerRequest request, String token, String inputTenant, String inputGroup,
-                              List<String> invokeNames, List<Map<String, Object>> inputParams) {
+    private Mono<ApiResponse> doApi(ServerRequest request, String token, String inputTenant, String inputGroup,
+                                    List<String> invokeNames, List<Map<String, Object>> inputParams) {
         return doApi(request, token, inputTenant, inputGroup, invokeNames, inputParams, false);
     }
 
     /**
      * 泛化调用方法
      */
-    private ApiResponse doApi(ServerRequest request, String token, String inputTenant, String inputGroup,
-                              List<String> invokeNames, List<Map<String, Object>> inputParams, boolean fromPath) {
+    private Mono<ApiResponse> doApi(ServerRequest request, String token, String inputTenant, String inputGroup,
+                                    List<String> invokeNames, List<Map<String, Object>> inputParams, boolean fromPath) {
         final String proof = UUID.randomUUID().toString();
-        ApiResponse response = new ApiResponse(true);
+        final ApiResponse response = new ApiResponse(true, proof);
         log.info("[GATEWAY] 来源: {} | 分组: {} | 调用方法: {} | 输入参数: {} | 凭证: {}",
                 inputTenant, inputGroup, invokeNames, inputParams, proof);
         AssertWrapper.isTrue(null != inputTenant && null != inputGroup, "调用方法输入错误!");
         gatewayCache.setRpcContext(inputTenant, inputGroup, proof);
 
-        int i = -1;
         int size = invokeNames.size();
-        List<Object> results = Lists.newArrayListWithExpectedSize(size);
-        try {
-            InvokeCache paramCache = doCache(inputGroup, inputParams, invokeNames);
-            //校验白名单及用户信息
-            Map<String, Object> memberInfo = doMember(inputTenant, inputGroup, paramCache, token);
+        InvokeCache paramCache = doCache(inputGroup, inputParams, invokeNames);
+        //校验白名单及用户信息
+        Map<String, Object> memberInfo = doMember(inputTenant, inputGroup, paramCache, token);
 
-            //用户或ip维度的限流
-            if (!currentLimit.tryConsume(request, memberInfo)) {
-                throw new PassedException(PlatformExceptionEnum.API_ACCESS_LIMIT);
-            }
+        //用户或ip维度的限流
+        if (!currentLimit.tryConsume(request, memberInfo)) {
+            throw new PassedException(PlatformExceptionEnum.API_ACCESS_LIMIT);
+        }
 
-            final Map<String, Integer> needs = paramCache.getNeedCaches();
-            final List<InvokeDetailCache> caches = paramCache.getInvokeDetails();
-            for (i = 0; i < size; i++) {
-                String invokeName = invokeNames.get(i);
-                Map<String, Object> inputParam = inputParams.get(i);
-                final InvokeDetailCache invokeDetailCache = caches.get(i);
+        final Map<String, Integer> needs = paramCache.getNeedCaches();
+        final List<InvokeDetailCache> caches = paramCache.getInvokeDetails();
+        final Mono<List<Object>> outcome = Flux.fromStream(() -> IntStream.range(0, size).mapToObj(i -> {
+            final String invokeName = invokeNames.get(i);
+            final Map<String, Object> inputParam = null == inputParams.get(i) ? Collections.emptyMap() : inputParams.get(i);
+            final InvokeDetailCache invokeDetailCache = caches.get(i);
+            AssertWrapper.notNull(invokeName, "调用方法名不能为空");
+            AssertWrapper.notNull(invokeDetailCache, "调用方法名未找到");
 
-                AssertWrapper.notNull(invokeName, "调用方法名不能为空");
-                if (null == inputParam) {
-                    inputParam = Collections.emptyMap();
-                }
-                AssertWrapper.notNull(invokeDetailCache, "调用方法名未找到");
-
-                //处理网关缓存
-                final String needKey = invokeName + methodSplit + inputParam.size();
-                final Integer cacheTime = needs.getOrDefault(needKey, 0);
-                if (cacheTime > 0) {
-                    final Object value = methodResultCache.getValue(needKey, inputParam, inputTenant, inputGroup);
-                    if (null == value) {
-                        final Object result = doResult(request, invokeName, inputParam, memberInfo, invokeDetailCache);
-                        methodResultCache.setValue(needKey, inputParam, inputTenant, inputGroup, result, cacheTime);
-                        results.add(result);
-                    } else {
-                        results.add(value);
-                    }
+            final Object result;
+            //处理网关缓存
+            final String needKey = invokeName + methodSplit + inputParam.size();
+            final Integer cacheTime = needs.getOrDefault(needKey, 0);
+            if (cacheTime > 0) {
+                final Object value = methodResultCache.getValue(needKey, inputParam, inputTenant, inputGroup);
+                if (null == value) {
+                    result = doResult(request, invokeName, inputParam, memberInfo, invokeDetailCache);
+                    methodResultCache.setValue(needKey, inputParam, inputTenant, inputGroup, result, cacheTime);
                 } else {
-                    results.add(doResult(request, invokeName, inputParam, memberInfo, invokeDetailCache));
-                }
-            }
-            if (fromPath) {
-                if (results.isEmpty()) {
-                    throw new PassedException(PlatformExceptionEnum.RESULT_ERROR);
-                } else {
-                    response.setPreload(results.get(0));
+                    result = value;
                 }
             } else {
-                response.setPreload(results);
+                result = doResult(request, invokeName, inputParam, memberInfo, invokeDetailCache);
             }
-        } catch (InnerException ex) {
-            log.warn("[GATEWAY] 系统内部异常, 具体信息如上");
-            response = new ApiResponse(PlatformExceptionEnum.SYSTEM_ERROR);
-        } catch (PassedException ex) {
-            log.warn("[GATEWAY] 业务内部校验不通过: {}", ex.getMessage());
-            response = ResultWrapper.err(ex);
-        } catch (RefundException ex) {
-            log.warn("[GATEWAY] 调用了未授权的资源: {}", ex.getMessage());
-            response = ResultWrapper.err(ex);
-        } catch (RpcException ex) {
-            log.error("[GATEWAY] DUBBO调用异常, 具体信息如上");
-            response = new ApiResponse(PlatformExceptionEnum.CLIENT_TIMEOUT);
-        } catch (GenericException ex) {
-            log.error("[GATEWAY] DUBBO调用内部自定义异常, 具体信息如上");
-            response = new ApiResponse(PlatformExceptionEnum.CLIENT_ERROR);
-        } catch (NullPointerException ex) {
-            log.warn("[GATEWAY] 出现空指针异常, 具体信息: ", ex);
-            response = new ApiResponse(PlatformExceptionEnum.BAD_REQUEST);
-        } catch (Throwable ex) {
-            log.warn("[GATEWAY] 系统调用未知异常, 具体信息: ", ex);
-            response = new ApiResponse(PlatformExceptionEnum.SYSTEM_BUSY);
-        }
+            return result;
+        })).collectList();
 
-        if (!fromPath && response.getCode() != 0) {
-            log.warn("[GATEWAY] 异常 [{}] 发生于第[{}]次方法调用", response.getMessage(), i + 1);
-            response.setPreload(Collections.singleton(response.getPreload()));
-        }
+        final Mono<ApiResponse> result;
+        if (response.getCode() == PlatformConstants.CORRECT_CODE) {
+            result = outcome.map(list -> {
+                if (fromPath) {
+                    if (list.isEmpty()) {
+                        response.exception(PlatformExceptionEnum.RESULT_ERROR);
+                    } else {
+                        response.setPreload(list.get(0));
+                    }
+                } else {
+                    response.setPreload(list);
+                }
+                if (!fromPath && response.getCode() != 0) {
+                    response.setPreload(Collections.singleton(response.getPreload()));
+                }
+                log.info("[GATEWAY] 来源: {} | 分组: {} | 调用方法: {} | 返回结果: {} | 凭证: {}",
+                        inputTenant, inputGroup, invokeNames, response.getPreload(), proof);
 
-        response.setProof(proof);
-        log.info("[GATEWAY] 来源: {} | 分组: {} | 调用方法: {} | 返回结果: {}",
-                inputTenant, inputGroup, invokeNames, response);
-        return response;
+                return response;
+            });
+        } else {
+            response.setProof(proof);
+            result = Mono.just(response);
+        }
+        return result;
     }
 
     private Map<String, Object> doMember(String inputTenant, String inoutGroup, InvokeCache paramCache, String token) {

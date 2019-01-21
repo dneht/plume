@@ -7,7 +7,7 @@
     <groupId>net.dloud.mimiron</groupId>
     <artifactId>mimiron</artifactId>
     <packaging>pom</packaging>
-    <version>0.5.2.0</version>
+    <version>0.6.0.0</version>
 
     <name>Mimiron</name>
     <description>a simple dubbo gateway and platform</description>

@@ -26,7 +26,6 @@ import net.dloud.platform.parse.utils.AopTargetUtil;
 import net.dloud.platform.parse.utils.ApiTestUtil;
 import net.dloud.platform.parse.utils.ResourceGet;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
@@ -61,7 +60,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/run")
 public class GatewayController {
-    private static final ParameterNameDiscoverer discoverer = new LocalVariableTableParameterNameDiscoverer();
     /**
      * 默认服务前缀
      */
@@ -70,10 +68,14 @@ public class GatewayController {
      * 默认服务后缀
      */
     private final String serviceSuffix = "Service";
+
     /**
      * 实现类后缀
      */
     private final String implSuffix = "Impl";
+
+    private static final ParameterNameDiscoverer discoverer = new LocalVariableTableParameterNameDiscoverer();
+
     @Autowired
     private ApplicationContext context;
 
@@ -97,7 +99,8 @@ public class GatewayController {
     @PostMapping("/api")
     public ApiResponse invoke(@RequestBody InvokeRequest request) {
         AssertWrapper.notNull(request, PlatformExceptionEnum.BAD_REQUEST);
-        AssertWrapper.notBlank(request.getTenant(), PlatformExceptionEnum.BAD_REQUEST);
+        final String tenant = request.getTenant();
+        AssertWrapper.notBlank(tenant, PlatformExceptionEnum.BAD_REQUEST);
         AssertWrapper.notEmpty(request.getInvoke(), PlatformExceptionEnum.BAD_REQUEST);
         AssertWrapper.notEmpty(request.getParam(), PlatformExceptionEnum.BAD_REQUEST);
 
@@ -110,7 +113,7 @@ public class GatewayController {
                 throw new PassedException("调用方法有误");
             }
 
-            result.add(handle(proof, getNames[1], getNames[2], request.getParam().get(i)));
+            result.add(handle(proof, tenant, getNames[1], getNames[2], request.getParam().get(i)));
             i++;
         }
 
@@ -121,7 +124,8 @@ public class GatewayController {
     public ApiResponse fullPath(@PathVariable String system, @PathVariable String clazz, @PathVariable String method,
                                 @RequestBody ApiRequest request) {
         AssertWrapper.notNull(request, PlatformExceptionEnum.BAD_REQUEST);
-        AssertWrapper.notBlank(request.getTenant(), PlatformExceptionEnum.BAD_REQUEST);
+        final String tenant = request.getTenant();
+        AssertWrapper.notBlank(tenant, PlatformExceptionEnum.BAD_REQUEST);
         AssertWrapper.notEmpty(request.getParam(), PlatformExceptionEnum.BAD_REQUEST);
 
         final String proof = UUID.randomUUID().toString();
@@ -133,24 +137,24 @@ public class GatewayController {
         if (!clazz.endsWith(serviceSuffix)) {
             clazz += serviceSuffix;
         }
-        return buildResult(proof, handle(proof, clazz, method, request.getParam()));
+        return buildResult(proof, handle(proof, tenant, clazz, method, request.getParam()));
     }
 
     @PostMapping("/{system}/_{method}")
     public ApiResponse simplePath(@PathVariable String system, @PathVariable String method,
                                   @RequestBody ApiRequest request) {
         AssertWrapper.notNull(request, PlatformExceptionEnum.BAD_REQUEST);
-        AssertWrapper.notBlank(request.getTenant(), PlatformExceptionEnum.BAD_REQUEST);
+        final String tenant = request.getTenant();
+        AssertWrapper.notBlank(tenant, PlatformExceptionEnum.BAD_REQUEST);
         AssertWrapper.notEmpty(request.getParam(), PlatformExceptionEnum.BAD_REQUEST);
 
         final String proof = UUID.randomUUID().toString();
         final String clazz = StringUtil.firstLowerCase(system) + serviceSuffix;
-        return buildResult(proof, handle(proof, clazz, method, request.getParam()));
+        return buildResult(proof, handle(proof, tenant, clazz, method, request.getParam()));
     }
 
-    private Object handle(String proof, String clazz, String method, Map<String, Object> param) {
-        RpcContext.getContext().setAttachment(PlatformConstants.PROOF_KEY, proof);
-
+    private Object handle(String proof, String tenant, String clazz, String method, Map<String, Object> param) {
+        setRpcContext(proof, tenant);
         final PairTuple<Object, Object> targetInfo = getTarget(clazz);
         final ThirdTuple<List<String>, Parameter[], MethodType> methodInfo = getMethod(targetInfo.getLast(), method, param.size());
 
@@ -189,6 +193,13 @@ public class GatewayController {
         response.setProof(proof);
         response.setPreload(result);
         return response;
+    }
+
+    private void setRpcContext(String proof, String inputTenant) {
+        final RpcContext context = RpcContext.getContext();
+        context.setAttachment(PlatformConstants.PROOF_KEY, proof);
+        context.setAttachment(PlatformConstants.SUBGROUP_KEY, PlatformConstants.MODE_DEV);
+        context.setAttachment(PlatformConstants.FROM_KEY, inputTenant);
     }
 
     private PairTuple<Object, Object> getTarget(String clazz) {

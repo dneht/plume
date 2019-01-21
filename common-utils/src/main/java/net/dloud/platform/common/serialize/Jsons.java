@@ -5,6 +5,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.module.scala.DefaultScalaModule;
 import net.dloud.platform.common.exception.SerializeException;
 import net.dloud.platform.common.extend.StringUtil;
 
@@ -15,9 +17,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * json操作
+ *
  * @author QuDasheng
+ * @program: common
  * @create 2017-06-07 16:09
- */
+ **/
 public class Jsons {
     private static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
@@ -71,7 +76,7 @@ public class Jsons {
 
     public static synchronized Jsons getExcludeEmpty() {
         if (null == EXCLUDE_EMPTY) {
-            EXCLUDE_EMPTY = new Jsons(JsonInclude.Include.NON_EMPTY);
+            EXCLUDE_EMPTY= new Jsons(JsonInclude.Include.NON_EMPTY);
         }
         return EXCLUDE_EMPTY;
     }
@@ -86,42 +91,6 @@ public class Jsons {
         }
         try {
             return mapper.writeValueAsString(target);
-        } catch (IOException e) {
-            throw new SerializeException(e);
-        }
-    }
-
-    public Map<String, Object> mapJson(String json) {
-        if (StringUtil.isBlank(json)) {
-            return Collections.emptyMap();
-        }
-        try {
-            return mapper.readValue(json, new TypeReference<Map<String, Object>>() {
-            });
-        } catch (IOException e) {
-            throw new SerializeException(e);
-        }
-    }
-
-    public List<Object> listJson(String json) {
-        if (StringUtil.isBlank(json)) {
-            return Collections.emptyList();
-        }
-        try {
-            return mapper.readValue(json, new TypeReference<List<Object>>() {
-            });
-        } catch (IOException e) {
-            throw new SerializeException(e);
-        }
-    }
-
-    public Map<String, String> mapStringJson(String json) {
-        if (StringUtil.isBlank(json)) {
-            return null;
-        }
-        try {
-            return mapper.readValue(json, new TypeReference<Map<String, String>>() {
-            });
         } catch (IOException e) {
             throw new SerializeException(e);
         }
@@ -156,6 +125,53 @@ public class Jsons {
         }
         try {
             return mapper.readValue(json, type);
+        } catch (IOException e) {
+            throw new SerializeException(e);
+        }
+    }
+
+    public List<Object> listJson(String json) {
+        if (StringUtil.isBlank(json)) {
+            return Collections.emptyList();
+        }
+        try {
+            return mapper.readValue(json, new TypeReference<List<Object>>() {
+            });
+        } catch (IOException e) {
+            throw new SerializeException(e);
+        }
+    }
+
+    public <T> List<T> listJson(String json, Class<T> clazz) {
+        if (StringUtil.isBlank(json)) {
+            return Collections.emptyList();
+        }
+        try {
+            return mapper.readValue(json, createCollectionType(List.class, clazz));
+        } catch (IOException e) {
+            throw new SerializeException(e);
+        }
+    }
+
+    public Map<String, Object> mapJson(String json) {
+        if (StringUtil.isBlank(json)) {
+            return Collections.emptyMap();
+        }
+        try {
+            return mapper.readValue(json, new TypeReference<Map<String, Object>>() {
+            });
+        } catch (IOException e) {
+            throw new SerializeException(e);
+        }
+    }
+
+    public Map<String, String> mapStringJson(String json) {
+        if (StringUtil.isBlank(json)) {
+            return null;
+        }
+        try {
+            return mapper.readValue(json, new TypeReference<Map<String, String>>() {
+            });
         } catch (IOException e) {
             throw new SerializeException(e);
         }

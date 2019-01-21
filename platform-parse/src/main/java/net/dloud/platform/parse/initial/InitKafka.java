@@ -54,7 +54,6 @@ public class InitKafka {
      */
     public ProducerFactory<Long, KafkaMessage> producerFactory() {
         Map<String, Object> props = Maps.newHashMapWithExpectedSize(8);
-        // kafka.metadata.broker.list=10.16.0.214:9092,10.16.0.215:9092,10.16.0.216:9092
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerList);
         props.put(ProducerConfig.RETRIES_CONFIG, 4);
         props.put(ProducerConfig.BATCH_SIZE_CONFIG, 4096);
@@ -72,7 +71,6 @@ public class InitKafka {
      */
     public ConsumerFactory<Long, KafkaMessage> consumerFactory() {
         Map<String, Object> props = Maps.newHashMapWithExpectedSize(10);
-        // kafka.metadata.broker.list=10.16.0.214:9092,10.16.0.215:9092,10.16.0.216:9092
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerList);
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1);
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);

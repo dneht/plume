@@ -3,8 +3,10 @@ package net.dloud.platform.common.member;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import net.dloud.platform.common.annotation.Transient;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 
 /**
  * @author QuDasheng
@@ -14,6 +16,9 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MemberIdInfo {
+    @Transient
+    private static MemberIdInfo empty;
+
     /**
      * 用户id
      */
@@ -28,4 +33,12 @@ public class MemberIdInfo {
      * 上一次登录时间
      */
     private Timestamp loginAt;
+
+
+    public static MemberIdInfo empty() {
+        if (null == empty) {
+            empty = new MemberIdInfo(0L, 0, Timestamp.from(Instant.now()));
+        }
+        return empty;
+    }
 }
