@@ -51,16 +51,16 @@ public class InitSource {
     @Reference
     private InitialService sourceInit;
 
-    //TODO 写入配置中心，目前随接口传过来
     private byte[] enckey;
 
     private Map<String, KeystoreResult> keystore;
 
+
     @PostConstruct
-    public void init() {
+    private void init() {
         final PairResult<byte[], byte[]> source = sourceInit.getSource(new GroupEntry(
-                PlatformConstants.APPID, PlatformConstants.APPNAME, PlatformConstants.MODE,
-                PlatformConstants.GROUP, PlatformConstants.LOCAL_HOST_IP + ":" + StartupConstants.SERVER_PORT, ""));
+                PlatformConstants.APPID, PlatformConstants.APPNAME, StartupConstants.RUN_MODE,
+                PlatformConstants.GROUP, StartupConstants.RUN_HOST + ":" + StartupConstants.SERVER_PORT, ""));
         if (null != source && source.isSuccess()) {
             enckey = source.getFirst();
             keystore = KryoBaseUtil.readFromByteArray(source.getLast());

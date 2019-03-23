@@ -1,7 +1,6 @@
 package net.dloud.platform.parse.eureka;
 
-import net.dloud.platform.parse.utils.RunHost;
-import org.springframework.beans.factory.annotation.Value;
+import net.dloud.platform.extend.constant.StartupConstants;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.netflix.eureka.EurekaInstanceConfigBean;
@@ -16,8 +15,6 @@ import org.springframework.stereotype.Component;
 @Component
 @ConditionalOnClass(value = org.springframework.cloud.netflix.eureka.EurekaInstanceConfigBean.class)
 public class EurekaConfigBean extends EurekaInstanceConfigBean {
-    @Value("${eureka.instance.hostname}")
-    private String hostname;
 
     public EurekaConfigBean(InetUtils inetUtils) {
         super(inetUtils);
@@ -30,9 +27,7 @@ public class EurekaConfigBean extends EurekaInstanceConfigBean {
 
     @Override
     public void setPreferIpAddress(boolean preferIpAddress) {
-        // getHostname() 不能使用
-        if (RunHost.canUseDomain(RunHost.localHost, hostname)) {
-            super.setHostname(RunHost.localHost.getHostName());
+        if (StartupConstants.IS_PUBLIC) {
             super.setPreferIpAddress(false);
         } else {
             super.setPreferIpAddress(true);

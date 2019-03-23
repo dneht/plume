@@ -12,10 +12,6 @@ import net.dloud.platform.common.mapper.element.UpdateMapperElement;
  **/
 public interface MapperComponent extends BaseComponent {
 
-    default String source() {
-        return null;
-    }
-
     default SelectMapperElement choose(String fields) {
         return new SelectMapperElement().choose(fields);
     }
@@ -106,6 +102,10 @@ public interface MapperComponent extends BaseComponent {
 
     default UnionMapperElement unionAll(SelectMapperElement... elements) {
         return new UnionMapperElement().unionAll(elements);
+    }
+
+    default String source() {
+        return null;
     }
 
     default TableMapperElement table(String name) {

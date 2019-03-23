@@ -54,12 +54,20 @@ public class PageResult<T> extends BaseResult {
             result.setTotalPageNum(totalPageNum);
             result.setTotalNum(totalNum);
             result.setPageSize(pageSize);
+            result.setResults(Collections.emptyList());
         }
         return result;
     }
 
     public static <T> PageResult<T> build(PageEntry pageEntry, Long totalNum, List<T> values) {
         final PageResult<T> result = build(pageEntry, totalNum);
+        result.setResults(values);
+        return result;
+    }
+
+    public static <T> PageResult<T> build(String code, PageEntry pageEntry, Long totalNum, List<T> values) {
+        final PageResult<T> result = build(pageEntry, totalNum);
+        result.setCode(code);
         result.setResults(values);
         return result;
     }

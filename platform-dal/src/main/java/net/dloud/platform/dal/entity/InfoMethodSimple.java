@@ -18,7 +18,7 @@ public class InfoMethodSimple {
 
     private String invokeName;
 
-    private int invokeLength;
+    private Integer invokeLength;
 
     private String simpleComment;
 }

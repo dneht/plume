@@ -27,6 +27,13 @@ public class ListResult<T> extends BaseResult {
     private List<T> results;
 
 
+    public static <T> ListResult<T> build(String code, List<T> values) {
+        final ListResult<T> result = new ListResult<>();
+        result.setCode(code);
+        result.setResults(values);
+        return result;
+    }
+
     public static <T> ListResult<T> success(List<T> values) {
         final ListResult<T> result = new ListResult<>();
         result.setResults(values);

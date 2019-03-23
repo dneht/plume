@@ -1,5 +1,6 @@
 package net.dloud.platform.gateway.bean;
 
+import com.alibaba.dubbo.config.ReferenceConfig;
 import com.alibaba.dubbo.rpc.service.GenericService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,11 +15,6 @@ import java.util.Map;
 @Data
 @AllArgsConstructor
 public class InvokeDetailCache {
-    /**
-     * 泛化引用
-     */
-    private GenericService service;
-
     /**
      * 参数字段名
      */
@@ -38,6 +34,16 @@ public class InvokeDetailCache {
      * 缓存时间
      */
     private Integer cacheTime = 0;
+
+    /**
+     * 缓存时间
+     */
+    private Boolean isTrack = false;
+
+    /**
+     * 泛化引用
+     */
+    private ReferenceConfig<GenericService> reference;
 
     /**
      * 注入参数

@@ -1,6 +1,6 @@
 package net.dloud.platform.dal.enums;
 
-import net.dloud.platform.parse.redisson.SequenceEnum;
+import net.dloud.platform.extend.assist.SequenceEnum;
 
 /**
  * @author QuDasheng

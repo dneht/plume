@@ -2,7 +2,7 @@ package net.dloud.platform.dal;
 
 import net.dloud.platform.common.mapper.MapperComponent;
 import net.dloud.platform.dal.entity.CenterEntity;
-import net.dloud.platform.extend.constant.PlatformConstants;
+import net.dloud.platform.extend.constant.StartupConstants;
 import org.jdbi.v3.core.Jdbi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -21,7 +21,7 @@ public class SourceComponent implements MapperComponent {
 
     @PostConstruct
     public void init() {
-        String center = "system_" + PlatformConstants.MODE;
+        String center = "system_" + StartupConstants.RUN_MODE;
         insertCenterSql = upsert(center, columns(CenterEntity.class),
                 params(CenterEntity.class), valuesBaseRemove(CenterEntity.class, keys("systemId"))).build();
         getCenterSql = select(center, columns(CenterEntity.class)).where("system_id = :systemId").build();

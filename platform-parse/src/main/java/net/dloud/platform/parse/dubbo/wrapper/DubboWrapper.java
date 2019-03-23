@@ -1,6 +1,5 @@
 package net.dloud.platform.parse.dubbo.wrapper;
 
-import com.alibaba.dubbo.common.utils.ConcurrentHashSet;
 import lombok.extern.slf4j.Slf4j;
 import net.dloud.platform.common.gateway.bean.StartupTime;
 import net.dloud.platform.common.serialize.KryoBaseUtil;
@@ -8,14 +7,15 @@ import net.dloud.platform.extend.constant.PlatformConstants;
 import net.dloud.platform.extend.constant.StartupConstants;
 import net.dloud.platform.extend.tuple.PairTuple;
 import net.dloud.platform.parse.curator.wrapper.CuratorWrapper;
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
+import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -32,7 +32,7 @@ public class DubboWrapper {
 
 
     public static String currentPath() {
-        return DUBBO_GROUP_PATH + "/" + CuratorWrapper.currentPath(PlatformConstants.HOST, StartupConstants.DUBBO_PORT);
+        return DUBBO_GROUP_PATH + "/" + CuratorWrapper.currentPath(StartupConstants.RUN_HOST, StartupConstants.DUBBO_PORT);
     }
 
     /**
@@ -62,6 +62,17 @@ public class DubboWrapper {
         }
     }
 
+    public static void nodeCreate(CuratorFramework curatorClient, String currentPath) {
+        try {
+            curatorClient.create().creatingParentContainersIfNeeded().withMode(CreateMode.EPHEMERAL)
+                    .forPath(currentPath, KryoBaseUtil.writeObjectToByteArray(new StartupTime(
+                            PlatformConstants.APPID, PlatformConstants.APPKEY,
+                            StartupConstants.SERVER_PORT, StartupConstants.DUBBO_PORT)));
+        } catch (Exception e) {
+            log.error("[{}] 新建CURATOR节点失败: {}, {}, {}", PlatformConstants.APPNAME, currentPath, e.getMessage());
+        }
+    }
+
     public static PathChildrenCacheListener dubboListener(String group, String basePath) {
         final Map<String, StartupTime> availableProvider = dubboProvider.getOrDefault(group, new ConcurrentHashMap<>());
         if (!dubboProvider.containsKey(group)) {
@@ -82,11 +93,10 @@ public class DubboWrapper {
                 case CHILD_REMOVED:
                     final String del = data.getPath().replaceFirst(basePath + "/", "");
                     final Stat stat = client.getState() == CuratorFrameworkState.STARTED ? client.checkExists().forPath(data.getPath()) : null;
-                    if (null != stat) {
+                    if (null == stat) {
                         availableProvider.remove(del);
                         log.info("[PLATFORM] 节点[{}]移出GROUP[{}]", del, group);
                     }
-                    log.info("[PLATFORM] 节点[{}]移出GROUP[{}]", del, group);
                     break;
                 default:
                     log.info("[PLATFORM] 当前节点状态: {}", event.getType());

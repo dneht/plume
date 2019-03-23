@@ -1,4 +1,4 @@
-package net.dloud.platform.parse.redisson.serialization;
+package net.dloud.platform.extend.assist.serialization;
 
 import net.dloud.platform.common.serialize.KryoBaseUtil;
 import org.springframework.data.redis.serializer.RedisSerializer;
@@ -27,7 +27,7 @@ public class KryoSerializer implements RedisSerializer<Object> {
     @Override
     public byte[] serialize(@Nullable Object data) throws SerializationException {
         if (null == data) {
-            return new byte[0];
+            return null;
         }
 
         try {

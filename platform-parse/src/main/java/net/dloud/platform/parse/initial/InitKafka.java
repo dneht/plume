@@ -19,14 +19,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.kafka.annotation.EnableKafka;
-import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
-import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
-import org.springframework.kafka.listener.config.ContainerProperties;
+import org.springframework.kafka.listener.ContainerProperties;
 
 import java.util.Map;
 
@@ -45,6 +43,9 @@ public class InitKafka {
 
     @Value("${kafka.listener.concurrency:2}")
     private Integer listenerConcurrency;
+
+    @Value("${kafka.use.different-group:false}")
+    private Boolean useDifferent;
 
     @Autowired
     private KafkaMessageListener messageListener;
@@ -67,9 +68,9 @@ public class InitKafka {
     }
 
     /**
-     * 消费者者工厂
+     * 消费者配置
      */
-    public ConsumerFactory<Long, KafkaMessage> consumerFactory() {
+    private Map<String, Object> consumerProps(String groupId) {
         Map<String, Object> props = Maps.newHashMapWithExpectedSize(10);
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerList);
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1);
@@ -79,8 +80,8 @@ public class InitKafka {
         props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "15000");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KryoDeserializer.class);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, PlatformConstants.KAFKA_CONSUMER_GROUP);
-        return new DefaultKafkaConsumerFactory<>(props);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        return props;
     }
 
     /**
@@ -95,16 +96,31 @@ public class InitKafka {
     /**
      * 消费者配置
      */
-    @Bean
-    public ConcurrentMessageListenerContainer<Long, KafkaMessage> messageListenerContainer() {
-        final ContainerProperties containerProperties = new ContainerProperties(PlatformConstants.KAFKA_TOPIC);
+    private ConcurrentMessageListenerContainer<Long, KafkaMessage> messageListenerContainer(String topic, String groupId) {
+        final ContainerProperties containerProperties = new ContainerProperties(topic);
         containerProperties.setMessageListener(messageListener);
-        containerProperties.setAckMode(AbstractMessageListenerContainer.AckMode.MANUAL);
+        containerProperties.setAckMode(ContainerProperties.AckMode.MANUAL);
 
-        final ConcurrentMessageListenerContainer<Long, KafkaMessage> listenerContainer =
-                new ConcurrentMessageListenerContainer<>(consumerFactory(), containerProperties);
-        listenerContainer.setConcurrency(listenerConcurrency);
+        final ConcurrentMessageListenerContainer<Long, KafkaMessage> listenerContainer = new ConcurrentMessageListenerContainer<>(
+                new DefaultKafkaConsumerFactory<>(consumerProps(groupId)), containerProperties);
         listenerContainer.setAutoStartup(true);
+        return listenerContainer;
+    }
+
+    @Bean
+    @Primary
+    public ConcurrentMessageListenerContainer<Long, KafkaMessage> messageListenerContainer() {
+        final ConcurrentMessageListenerContainer<Long, KafkaMessage> listenerContainer =
+                messageListenerContainer(PlatformConstants.KAFKA_TOPIC, PlatformConstants.KAFKA_CONSUMER_GROUP);
+        listenerContainer.setConcurrency(listenerConcurrency);
+        return listenerContainer;
+    }
+
+    @Bean
+    public ConcurrentMessageListenerContainer<Long, KafkaMessage> messageAllListenerContainer() {
+        final ConcurrentMessageListenerContainer<Long, KafkaMessage> listenerContainer =
+                messageListenerContainer(PlatformConstants.KAFKA_TOPIC_ALL, PlatformConstants.KAFKA_CONSUMER_GROUP_DIFF);
+        listenerContainer.setConcurrency(1);
         return listenerContainer;
     }
 }

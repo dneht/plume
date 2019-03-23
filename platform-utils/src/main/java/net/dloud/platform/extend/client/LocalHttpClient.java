@@ -1,5 +1,7 @@
 package net.dloud.platform.extend.client;
 
+import com.alibaba.dubbo.rpc.RpcContext;
+import net.dloud.platform.extend.constant.PlatformConstants;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
@@ -111,7 +113,8 @@ public class LocalHttpClient {
      * @return log request id
      */
     private static String loggerRequest(HttpUriRequest request) {
-        String id = UUID.randomUUID().toString();
+        String proof = RpcContext.getContext().getAttachment(PlatformConstants.PROOF_KEY);
+        String id = null == proof ? UUID.randomUUID().toString() : proof;
         if (log.isInfoEnabled() || log.isDebugEnabled()) {
             if (request instanceof HttpEntityEnclosingRequestBase) {
                 HttpEntityEnclosingRequestBase base = (HttpEntityEnclosingRequestBase) request;

@@ -16,15 +16,15 @@ public class InfoMethodDetail {
 
     private String invokeName;
 
-    private int invokeLength;
+    private Integer invokeLength;
 
-    private boolean isWhitelist;
+    private Boolean isWhitelist = false;
 
-    private boolean isBackground;
+    private Boolean isBackground = false;
 
-    private int cacheTime;
+    private Boolean cacheTime;
 
-    private boolean isTrack = false;
+    private Boolean isTrack = false;
 
     private byte[] parameterInfo;
 

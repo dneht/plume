@@ -18,6 +18,7 @@ import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.DispatcherHandler;
+import org.springframework.web.reactive.socket.client.TomcatWebSocketClient;
 import org.springframework.web.reactive.socket.client.UndertowWebSocketClient;
 import org.springframework.web.reactive.socket.client.WebSocketClient;
 import org.springframework.web.servlet.DispatcherServlet;
@@ -68,6 +69,15 @@ public class WebServerInitialize {
                 factory.addDeploymentInfoCustomizers((builder) -> builder.addInitialHandlerChainWrapper(undertowShutdown));
                 factory.addBuilderCustomizers(builder -> builder.setServerOption(UndertowOptions.ENABLE_STATISTICS, true));
             };
+        }
+    }
+
+    @Configuration
+    @ConditionalOnClass({DispatcherHandler.class, Tomcat.class, TomcatWebSocketClient.class})
+    public class InitTomcatWebSocketClient {
+        @Bean
+        public WebSocketClient webSocketClient() {
+            return new TomcatWebSocketClient();
         }
     }
 

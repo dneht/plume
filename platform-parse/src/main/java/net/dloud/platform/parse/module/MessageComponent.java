@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.dloud.platform.common.domain.message.KafkaMessage;
 import net.dloud.platform.extend.constant.CenterEnum;
 import net.dloud.platform.extend.constant.PlatformConstants;
+import net.dloud.platform.extend.constant.StartupConstants;
 import net.dloud.platform.extend.wrapper.AssertWrapper;
 import net.dloud.platform.parse.kafka.SimpleMessage;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -34,19 +35,26 @@ public class MessageComponent {
     /**
      * 发送消息到本系统
      */
-    public boolean sendMessage(final SimpleMessage receive) {
+    public boolean sendRecv(final SimpleMessage receive) {
         return sendMessage(receive, Collections.singletonList(PlatformConstants.KAFKA_TOPIC));
     }
 
     /**
-     * 发送消息
+     * 发送消息到指定系统
      */
-    public boolean sendMessage(final CenterEnum center, final SimpleMessage receive) {
+    public boolean sendTo(final CenterEnum center, final SimpleMessage receive) {
         return sendMessage(receive, Collections.singletonList(center.getTopic()));
     }
 
-    public boolean sendMessage(final List<CenterEnum> centers, final SimpleMessage receive) {
+    public boolean sendTo(final List<CenterEnum> centers, final SimpleMessage receive) {
         return sendMessage(receive, centers.stream().map(CenterEnum::getTopic).collect(Collectors.toList()));
+    }
+
+    /**
+     * 发送消息到指定系统下的所有机器
+     */
+    public boolean sendAll(final CenterEnum center, final SimpleMessage receive) {
+        return sendMessage(receive, Collections.singletonList(center.getTopic() + "-all"));
     }
 
     private boolean sendMessage(final SimpleMessage receive, final List<String> topics) {
@@ -64,7 +72,7 @@ public class MessageComponent {
         message.setProof(null == proof ? (null == kafkaProof.get()
                 ? UUID.randomUUID().toString() : kafkaProof.get()) : proof);
         message.setBean(bean);
-        if (PlatformConstants.MODE.equalsIgnoreCase(PlatformConstants.MODE_DEV)) {
+        if (StartupConstants.RUN_MODE.equalsIgnoreCase(PlatformConstants.MODE_DEV)) {
             message.setOnly(true);
         } else {
             message.setOnly(receive.isOnly());

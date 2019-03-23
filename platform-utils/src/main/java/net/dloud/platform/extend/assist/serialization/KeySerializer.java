@@ -1,6 +1,7 @@
-package net.dloud.platform.parse.redisson.serialization;
+package net.dloud.platform.extend.assist.serialization;
 
 import net.dloud.platform.extend.constant.PlatformConstants;
+import net.dloud.platform.extend.constant.StartupConstants;
 import net.dloud.platform.extend.wrapper.AssertWrapper;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
@@ -12,7 +13,7 @@ import java.nio.charset.StandardCharsets;
  * @create 2018-10-22 15:17
  **/
 public class KeySerializer implements RedisSerializer<String> {
-    private final String prefix = PlatformConstants.APPID + "-" + PlatformConstants.MODE + "-";
+    private final String prefix = PlatformConstants.APPID + "-" + StartupConstants.RUN_MODE + "-";
 
     private final Charset charset;
 

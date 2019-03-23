@@ -168,7 +168,6 @@ public class InfoApi {
                         map.put("permissionInfo", Collections.emptyMap());
                     }
 
-
                     //开始处理参数
                     final String thisClazzName = methodDetail.getClazzName();
                     Set<String> clazzNames = Sets.newHashSet(methodDetail.getClazzName());

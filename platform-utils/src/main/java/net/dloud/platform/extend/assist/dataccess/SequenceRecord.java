@@ -1,4 +1,4 @@
-package net.dloud.platform.parse.redisson.dataccess;
+package net.dloud.platform.extend.assist.dataccess;
 
 import lombok.Data;
 

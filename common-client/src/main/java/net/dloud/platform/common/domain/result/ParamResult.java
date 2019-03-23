@@ -24,6 +24,13 @@ public class ParamResult<T> extends BaseResult {
     private T result;
 
 
+    public static <T> ParamResult<T> build(String code, T value) {
+        final ParamResult<T> result = new ParamResult<>();
+        result.setCode(code);
+        result.setResult(value);
+        return result;
+    }
+
     public static <T> ParamResult<T> success(T value) {
         final ParamResult<T> result = new ParamResult<>();
         result.setResult(value);

@@ -1,5 +1,8 @@
 package net.dloud.platform.common.mapper.element;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static net.dloud.platform.common.mapper.element.MapperBuildUtil.AND;
 import static net.dloud.platform.common.mapper.element.MapperBuildUtil.ASC;
 import static net.dloud.platform.common.mapper.element.MapperBuildUtil.COMMA;
@@ -27,7 +30,9 @@ public class SelectMapperElement implements BaseMapperElement {
     private StringBuilder sentence = new StringBuilder();
 
     private boolean force;
+    private String prefix;
     private String[] wheres;
+    private List<String> whereSubs;
     private String[] groups;
     private String[] having;
     private String order;
@@ -44,6 +49,11 @@ public class SelectMapperElement implements BaseMapperElement {
 
     public SelectMapperElement force() {
         this.force = true;
+        return this;
+    }
+
+    public SelectMapperElement soft(String prefix) {
+        this.prefix = prefix;
         return this;
     }
 
@@ -64,28 +74,18 @@ public class SelectMapperElement implements BaseMapperElement {
         return this;
     }
 
-    public SelectMapperElement from(TableMapperElement table) {
-        sentence.append(FROM).append(table.build());
-        return this;
-    }
-
     public SelectMapperElement choose(String fields) {
         sentence.append(SELECT).append(fields);
         return this;
     }
 
-    public SelectMapperElement subSelect(BaseMapperElement subSelect) {
-        sentence.append(FROM).append(LEFT_BRACKET).append(subSelect.build()).append(RIGHT_BRACKET);
+    public SelectMapperElement from(TableMapperElement table) {
+        sentence.append(FROM).append(table.build());
         return this;
     }
 
-    public SelectMapperElement subSelect(String asTable, BaseMapperElement subSelect) {
+    public SelectMapperElement fromSub(String asTable, BaseMapperElement subSelect) {
         sentence.append(FROM).append(LEFT_BRACKET).append(subSelect.build()).append(RIGHT_BRACKET).append(asTable);
-        return this;
-    }
-
-    public SelectMapperElement as(String asTable) {
-        sentence.append(" ").append(asTable);
         return this;
     }
 
@@ -154,8 +154,24 @@ public class SelectMapperElement implements BaseMapperElement {
         return this;
     }
 
+    public SelectMapperElement as(String asTable) {
+        sentence.append(" ").append(asTable);
+        return this;
+    }
+
     public SelectMapperElement where(String... wheres) {
         this.wheres = wheres;
+        return this;
+    }
+
+    public SelectMapperElement whereSub(String asTable, BaseMapperElement subSelect) {
+        this.whereSubs = new ArrayList<>();
+        this.whereSubs.add(LEFT_BRACKET + subSelect.build() + RIGHT_BRACKET + " " + asTable);
+        return this;
+    }
+
+    public SelectMapperElement andSub(String asTable, BaseMapperElement subSelect) {
+        this.whereSubs.add(LEFT_BRACKET + subSelect.build() + RIGHT_BRACKET + " " + asTable);
         return this;
     }
 
@@ -206,7 +222,14 @@ public class SelectMapperElement implements BaseMapperElement {
     @Override
     public String build() {
         if (notEmpty(wheres)) {
-            sentence.append(new WhereMapperElement(force).where(wheres).build());
+            sentence.append(new WhereMapperElement(force).where(wheres).force(prefix).build());
+        }
+        if (notEmpty(whereSubs)) {
+            final String[] subs = new String[whereSubs.size()];
+            for (int i = 0; i < whereSubs.size(); i++) {
+                subs[i] = whereSubs.get(i);
+            }
+            sentence.append(new WhereMapperElement(force).where(subs).force(prefix).build());
         }
         if (notEmpty(groups)) {
             sentence.append(GROUP_BY);

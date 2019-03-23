@@ -31,10 +31,10 @@ public enum CenterEnum {
     }
 
     public String getTopic() {
-        return id + "-" + PlatformConstants.MODE;
+        return id + "-" + StartupConstants.RUN_MODE;
     }
 
     public String consumerGroup() {
-        return id + "-" + PlatformConstants.MODE + "-" + PlatformConstants.GROUP;
+        return id + "-" + StartupConstants.RUN_MODE + "-" + PlatformConstants.GROUP;
     }
 }

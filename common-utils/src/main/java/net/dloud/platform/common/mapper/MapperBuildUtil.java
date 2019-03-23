@@ -58,12 +58,7 @@ public class MapperBuildUtil {
         List<MapperFieldInfo> present = FIELD_CACHE.getIfPresent(name);
         if (null == present) {
             present = new ArrayList<>();
-            for (Field field : clazz.getDeclaredFields()) {
-                if (!checkTransient(field)) {
-                    final String fieldName = field.getName();
-                    present.add(new MapperFieldInfo(fieldName, ":" + fieldName, StringUtil.camel2UnderLower(fieldName)));
-                }
-            }
+            mapperField(present, clazz);
             if (useSuper) {
                 //遍历父类
                 checkSuper(clazz, present);
@@ -79,12 +74,15 @@ public class MapperBuildUtil {
             if (null != superclass.getSuperclass()) {
                 checkSuper(clazz.getSuperclass(), present);
             }
+            mapperField(present, superclass);
+        }
+    }
 
-            for (Field field : superclass.getDeclaredFields()) {
-                if (!checkTransient(field)) {
-                    final String fieldName = field.getName();
-                    present.add(new MapperFieldInfo(fieldName, ":" + fieldName, StringUtil.camel2UnderLower(fieldName)));
-                }
+    private static void mapperField(List<MapperFieldInfo> present, Class<?> superclass) {
+        for (Field field : superclass.getDeclaredFields()) {
+            if (!checkTransient(field)) {
+                final String fieldName = field.getName();
+                present.add(new MapperFieldInfo(fieldName, ":" + fieldName, StringUtil.camel2UnderLower(fieldName)));
             }
         }
     }

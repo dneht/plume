@@ -4,22 +4,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>net.dloud.mimiron</groupId>
-    <artifactId>mimiron</artifactId>
+    <groupId>net.dloud.stand</groupId>
+    <artifactId>stand-all</artifactId>
     <packaging>pom</packaging>
-    <version>0.6.0.0</version>
+    <version>0.7.0.0</version>
 
-    <name>Mimiron</name>
+    <name>Stand</name>
     <description>a simple dubbo gateway and platform</description>
     <url>https://dloud.net</url>
-    <prerequisites>
-        <maven>3.3.0</maven>
-    </prerequisites>
-
     <scm>
-        <url>git@github.com:dneht/mimiron.git</url>
-        <connection>scm:git@github.com:dneht/mimiron.git</connection>
-        <developerConnection>scm:git@github.com:dneht/mimiron.git</developerConnection>
+        <url>git@github.com:dneht/stand.git</url>
+        <connection>scm:git@github.com:dneht/stand.git</connection>
+        <developerConnection>scm:git@github.com:dneht/stand.git</developerConnection>
     </scm>
 
     <developers>
@@ -64,12 +60,12 @@
         <elastic.version>6.4.2</elastic.version>
         <druid.version>0.12.2</druid.version>
         <apollo.version>1.1.0</apollo.version>
-        <spring.version>5.0.10.RELEASE</spring.version>
-        <spring.boot.version>2.0.6.RELEASE</spring.boot.version>
-        <spring.cloud.version>Finchley.SR1</spring.cloud.version>
+        <spring.version>5.1.5.RELEASE</spring.version>
+        <spring.boot.version>2.1.3.RELEASE</spring.boot.version>
+        <spring.cloud.version>Greenwich.RELEASE</spring.cloud.version>
         <elastic.job.version>2.2.L</elastic.job.version>
-        <dubbo.version>2.6.4</dubbo.version>
-        <dubbo.rpc.version>2.6.4</dubbo.rpc.version>
+        <dubbo.version>2.6.6</dubbo.version>
+        <dubbo.rpc.version>2.6.6</dubbo.rpc.version>
         <sentinel.version>1.3.0-GA</sentinel.version>
         <servlet-api.version>4.0.1</servlet-api.version>
         <annotation-api.version>1.3.2</annotation-api.version>
@@ -89,58 +85,56 @@
         <source.level>1.8</source.level>
         <target.level>1.8</target.level>
         <build.encoding>UTF-8</build.encoding>
-        <maven-compiler-plugin.version>3.6.0</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>2.19.1</maven-surefire-plugin.version>
-        <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
-        <maven-jar-plugin.version>3.0.2</maven-jar-plugin.version>
-        <maven-war-plugin.version>3.0.0</maven-war-plugin.version>
-        <maven-install-plugin.version>2.5.2</maven-install-plugin.version>
-        <maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
-        <maven-javadoc-plugin.version>3.0.1</maven-javadoc-plugin.version>
-        <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
+        <maven-compiler-plugin>3.6.0</maven-compiler-plugin>
+        <maven-surefire-plugin>2.19.1</maven-surefire-plugin>
+        <maven-source-plugin>3.0.1</maven-source-plugin>
+        <maven-jar-plugin>3.0.2</maven-jar-plugin>
+        <maven-war-plugin>3.0.0</maven-war-plugin>
+        <maven-install-plugin>2.5.2</maven-install-plugin>
+        <maven-deploy-plugin>2.8.2</maven-deploy-plugin>
+        <maven-javadoc-plugin>3.0.1</maven-javadoc-plugin>
+        <maven-gpg-plugin>1.6</maven-gpg-plugin>
         <maven-findbugs-plugin>3.0.3</maven-findbugs-plugin>
         <maven-cobertura-plugin>2.7</maven-cobertura-plugin>
         <maven-cobertura-logback>1.1.7</maven-cobertura-logback>
         <maven-assembly-plugin>2.6</maven-assembly-plugin>
-        <public.repo>https://oss.sonatype.org/content/groups/public</public.repo>
-        <releases.repo>https://oss.sonatype.org/service/local/staging/deploy/maven2</releases.repo>
-        <snapshots.repo>https://oss.sonatype.org/content/repositories/snapshots</snapshots.repo>
+        <jib-maven-plugin>1.0.1</jib-maven-plugin>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>net.dloud.mimiron</groupId>
+                <groupId>net.dloud.stand</groupId>
                 <artifactId>common-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.dloud.mimiron</groupId>
+                <groupId>net.dloud.stand</groupId>
                 <artifactId>gateway-info</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.dloud.mimiron</groupId>
+                <groupId>net.dloud.stand</groupId>
                 <artifactId>common-utils</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.dloud.mimiron</groupId>
+                <groupId>net.dloud.stand</groupId>
                 <artifactId>platform-utils</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.dloud.mimiron</groupId>
+                <groupId>net.dloud.stand</groupId>
                 <artifactId>platform-actuator</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.dloud.mimiron</groupId>
+                <groupId>net.dloud.stand</groupId>
                 <artifactId>platform-parse</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.dloud.mimiron</groupId>
+                <groupId>net.dloud.stand</groupId>
                 <artifactId>platform-dal</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -583,8 +577,18 @@
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>${maven-assembly-plugin}</version>
+                    <configuration>
+                        <descriptorRefs>
+                            <descriptorRef>jar-with-dependencies</descriptorRef>
+                        </descriptorRefs>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>${maven-compiler-plugin.version}</version>
+                    <version>${maven-compiler-plugin}</version>
                     <configuration>
                         <source>${source.level}</source>
                         <target>${target.level}</target>
@@ -598,12 +602,12 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>${maven-surefire-plugin.version}</version>
+                    <version>${maven-surefire-plugin}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
-                    <version>${maven-source-plugin.version}</version>
+                    <version>${maven-source-plugin}</version>
                     <configuration>
                         <excludes>
                             <exclude>db.properties</exclude>
@@ -622,43 +626,37 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>${maven-jar-plugin.version}</version>
+                    <version>${maven-jar-plugin}</version>
                     <configuration>
                         <excludes>
                             <exclude>db.properties</exclude>
                             <exclude>init.sql</exclude>
                         </excludes>
                     </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>${maven-javadoc-plugin.version}</version>
                     <executions>
                         <execution>
-                            <id>attach-javadoc</id>
+                            <id>default-jar</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>javadoc-jar</id>
+                            <phase>package</phase>
                             <goals>
                                 <goal>jar</goal>
                             </goals>
                             <configuration>
-                                <doclint>none</doclint>
+                                <classifier>javadoc</classifier>
                             </configuration>
                         </execution>
                     </executions>
-                    <configuration>
-                        <show>public</show>
-                        <charset>UTF-8</charset>
-                        <encoding>UTF-8</encoding>
-                        <docencoding>UTF-8</docencoding>
-                        <links>
-                            <link>http://docs.oracle.com/javase/8/docs/api</link>
-                        </links>
-                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-gpg-plugin</artifactId>
-                    <version>${maven-gpg-plugin.version}</version>
+                    <version>${maven-gpg-plugin}</version>
                     <executions>
                         <execution>
                             <phase>verify</phase>
@@ -692,22 +690,25 @@
                     </dependencies>
                 </plugin>
                 <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-assembly-plugin</artifactId>
-                    <version>${maven-assembly-plugin}</version>
-                    <configuration>
-                        <descriptorRefs>
-                            <descriptorRef>jar-with-dependencies</descriptorRef>
-                        </descriptorRefs>
-                    </configuration>
+                    <groupId>com.google.cloud.tools</groupId>
+                    <artifactId>jib-maven-plugin</artifactId>
+                    <version>${jib-maven-plugin}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <version>${spring.boot.version}</version>
+                    <executions>
+                        <execution>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>repackage</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
                 <plugin>
-                    <groupId>net.dloud.mimiron</groupId>
+                    <groupId>net.dloud.stand</groupId>
                     <artifactId>platform-maven-plugin</artifactId>
                     <version>${project.version}</version>
                     <executions>
@@ -736,10 +737,6 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
             </plugin>
             <plugin>
@@ -757,33 +754,14 @@
         </plugins>
     </build>
 
-    <repositories>
-        <repository>
-            <id>sona-public</id>
-            <url>${public.repo}</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>sona-public</id>
-            <url>${public.repo}</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </pluginRepository>
-    </pluginRepositories>
-
     <distributionManagement>
         <repository>
-            <id>sona-releases</id>
-            <url>${releases.repo}</url>
+            <id>sona</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
         </repository>
         <snapshotRepository>
-            <id>sona-snapshots</id>
-            <url>${snapshots.repo}</url>
+            <id>sona</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
 </project>

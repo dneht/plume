@@ -5,6 +5,12 @@ package net.dloud.platform.extend.constant;
  * @create 2018-10-29 17:14
  **/
 public class StartupConstants {
+    public static boolean IS_PUBLIC;
+
+    public static String RUN_MODE;
+
+    public static String RUN_HOST;
+
     public static int SERVER_PORT;
 
     public static int DUBBO_PORT;

@@ -3,6 +3,7 @@ package net.dloud.platform.common.mapper.element;
 import static net.dloud.platform.common.mapper.element.MapperBuildUtil.AND;
 import static net.dloud.platform.common.mapper.element.MapperBuildUtil.AND_SOFT_DELETE;
 import static net.dloud.platform.common.mapper.element.MapperBuildUtil.WHERE;
+import static net.dloud.platform.common.mapper.element.MapperBuildUtil.notEmpty;
 import static net.dloud.platform.common.mapper.element.MapperBuildUtil.stringJoin;
 
 /**
@@ -13,6 +14,7 @@ public class WhereMapperElement implements BaseMapperElement {
     private StringBuilder sentence = new StringBuilder();
 
     private boolean force;
+    private String prefix;
     private String[] wheres;
 
 
@@ -22,6 +24,13 @@ public class WhereMapperElement implements BaseMapperElement {
 
     public WhereMapperElement where(String[] wheres) {
         this.wheres = wheres;
+        return this;
+    }
+
+    public WhereMapperElement force(String prefix) {
+        if (notEmpty(prefix)) {
+            this.prefix = prefix;
+        }
         return this;
     }
 
@@ -35,7 +44,11 @@ public class WhereMapperElement implements BaseMapperElement {
                 sentence.append(WHERE);
             }
             if (!force) {
-                sentence.append(AND_SOFT_DELETE).append(AND);
+                if (notEmpty(prefix)) {
+                    sentence.append(prefix).append(".").append(AND_SOFT_DELETE).append(AND);
+                } else {
+                    sentence.append(AND_SOFT_DELETE).append(AND);
+                }
             }
 
             stringJoin(this, sentence, length, AND, wheres);

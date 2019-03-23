@@ -26,6 +26,7 @@ import net.dloud.platform.parse.utils.AopTargetUtil;
 import net.dloud.platform.parse.utils.ApiTestUtil;
 import net.dloud.platform.parse.utils.ResourceGet;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
@@ -59,7 +60,10 @@ import java.util.stream.Collectors;
 @CrossOrigin
 @RestController
 @RequestMapping("/run")
+@ConditionalOnProperty(name = "gateway.notice.enable", matchIfMissing = true, havingValue = "true")
 public class GatewayController {
+    private static final ParameterNameDiscoverer discoverer = new LocalVariableTableParameterNameDiscoverer();
+
     /**
      * 默认服务前缀
      */
@@ -68,13 +72,10 @@ public class GatewayController {
      * 默认服务后缀
      */
     private final String serviceSuffix = "Service";
-
     /**
      * 实现类后缀
      */
     private final String implSuffix = "Impl";
-
-    private static final ParameterNameDiscoverer discoverer = new LocalVariableTableParameterNameDiscoverer();
 
     @Autowired
     private ApplicationContext context;
@@ -87,8 +88,8 @@ public class GatewayController {
     public Mono<String> invoke(Boolean type) {
         return Mono.fromSupplier(() -> {
             final Boolean isNew = null == type ? Boolean.FALSE : type;
-            final GroupEntry groupInfo = new GroupEntry(PlatformConstants.APPID, PlatformConstants.APPNAME, PlatformConstants.MODE,
-                    PlatformConstants.GROUP, PlatformConstants.LOCAL_HOST_IP + ":" + StartupConstants.SERVER_PORT, "");
+            final GroupEntry groupInfo = new GroupEntry(PlatformConstants.APPID, PlatformConstants.APPNAME, StartupConstants.RUN_MODE,
+                    PlatformConstants.GROUP, StartupConstants.RUN_HOST + ":" + StartupConstants.SERVER_PORT, "");
 
             final byte[] index = ResourceGet.resourceFile2Byte(InitGateway.PARSE_PATH + "index");
             final GatewayMethodResult result = gateway.clazzInfo(groupInfo, isNew, index);

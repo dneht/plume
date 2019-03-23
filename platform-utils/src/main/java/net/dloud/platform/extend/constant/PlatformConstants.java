@@ -1,17 +1,13 @@
 package net.dloud.platform.extend.constant;
 
-import com.alibaba.dubbo.rpc.RpcContext;
 import com.ctrip.framework.apollo.Config;
 import com.ctrip.framework.apollo.ConfigService;
-import net.dloud.platform.common.network.IPConvert;
 
 /**
  * @author QuDasheng
  * @create 2018-09-02 16:23
  **/
 public class PlatformConstants {
-    public static final String BOOTSTRAP_PROPERTY_SOURCE_NAME = "DloudBootstrapPropertySources";
-
     public static final Config CONFIG = ConfigService.getAppConfig();
 
     public static final Config COMMON = ConfigService.getConfig("DEV.COMM");
@@ -26,17 +22,9 @@ public class PlatformConstants {
 
     public static final String GROUP = CONFIG.getProperty("app.group", DEFAULT_GROUP);
 
-    public static final String SECRET= CONFIG.getProperty("app.secret", "");
+    public static final String SECRET = CONFIG.getProperty("app.secret", "");
 
     public static final String MODE_DEV = "dev";
-
-    public static final String MODE = COMMON.getProperty("run.mode", "");
-
-    public static final String HOST = COMMON.getProperty("run.host", "");
-
-    public static final String LOCAL_HOST_IP = RpcContext.getContext().getLocalHost();
-
-    public static final int LOCAL_HOST_IP_INT = IPConvert.ip2Num(LOCAL_HOST_IP);
 
     public static final int PROCESSOR_NUMBER = Runtime.getRuntime().availableProcessors();
 
@@ -48,21 +36,19 @@ public class PlatformConstants {
 
     public static final String DUBBO_LOAD_BALANCE = COMMON.getProperty("dubbo.provider.loadbalance", "random");
 
-    public static final String KAFKA_TOPIC = PlatformConstants.APPID + "-" + PlatformConstants.MODE;
+    public static final String KAFKA_TOPIC = PlatformConstants.APPID + "-" + StartupConstants.RUN_MODE;
 
     public static final String KAFKA_CONSUMER_GROUP = PlatformConstants.KAFKA_TOPIC + "-" + PlatformConstants.GROUP;
+
+    public static final String KAFKA_TOPIC_ALL = KAFKA_TOPIC + "-all";
+
+    public static final String KAFKA_CONSUMER_GROUP_DIFF = KAFKA_CONSUMER_GROUP + "-" + System.getProperty("mac", "");
+
+    public static final String BASE_PACKAGE = "net.dloud";
 
     public static final String PLATFORM_PACKAGE = "net.dloud.platform";
 
     public static final String PARSE_BASE_PATH = "classpath*:PARSE-INF/";
-
-    public static final String SOURCE_MYSQL = "mysql";
-    public static final String SOURCE_MYSQL_PUBLIC = "mysql_public";
-    public static final String SOURCE_REDIS = "redis";
-    public static final String SOURCE_REDIS_CORE = "redis_core";
-    public static final String SOURCE_IGNITE = "ignite";
-    public static final String SOURCE_ELASTIC = "elastic";
-    public static final String SOURCE_DRUID = "druid";
 
 
     public static final int CORRECT_CODE = 0;
@@ -76,6 +62,15 @@ public class PlatformConstants {
     public static final String SUBGROUP_KEY = "subgroup";
 
     public static final String HANDGROUP_KEY = "handgroup";
+
+
+    public static final String SOURCE_MYSQL = "mysql";
+    public static final String SOURCE_MYSQL_PUBLIC = "mysql_public";
+    public static final String SOURCE_REDIS = "redis";
+    public static final String SOURCE_REDIS_CORE = "redis_core";
+    public static final String SOURCE_IGNITE = "ignite";
+    public static final String SOURCE_ELASTIC = "elastic";
+    public static final String SOURCE_DRUID = "druid";
 
     public static final int EXCEPTION_CODE_PASSED = 1;
     public static final int EXCEPTION_CODE_INNER = 2;

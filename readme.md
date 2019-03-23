@@ -23,6 +23,7 @@
 11. [简单的调用日志链路](quickstart/i11.simple-call-link.md)
 12. [优雅关机(只有tomcat和undertow)](quickstart/i12.graceful-shutdown.md)
 13. [开启Security(内存用户)](quickstart/i13.spring-security-simple.md)
+14. [K8S部分支持说明](quickstart/i14.k8s-support.md)
 
 ## 未实现部分
 1. 接口签名具体实现
@@ -30,3 +31,14 @@
 
 ## 附上主流程
 ![](quickstart/process.png)
+
+# 版本记录
+## 0.7.0.0 (19.03.15)
+1. spring boot -> 2.1.3.RELEASE | dubbo -> 2.6.6
+2. kafka添加all模式，可以发送给当前topic下的所有消费者
+3. 网关中的dubbo reference失效时执行其destroy方法
+4. 添加对于k8s的部分支持
+5. 修改启动时的端口选择及常量
+6. 修复本地网关缓存清理不及时造成的调用问题
+7. 修复及优化MapperComponent
+8. 其它结构调整及修改

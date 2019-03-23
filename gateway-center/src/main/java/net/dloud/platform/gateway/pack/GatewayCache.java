@@ -8,6 +8,7 @@ import com.alibaba.dubbo.rpc.RpcContext;
 import com.alibaba.dubbo.rpc.service.GenericService;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.RemovalCause;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,6 @@ import net.dloud.platform.extend.constant.PlatformConstants;
 import net.dloud.platform.extend.constant.PlatformExceptionEnum;
 import net.dloud.platform.extend.exception.PassedException;
 import net.dloud.platform.gateway.bean.InvokeDetailCache;
-import net.dloud.platform.parse.module.AssistComponent;
 import org.jdbi.v3.core.Jdbi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -80,9 +80,6 @@ public class GatewayCache {
     @Autowired
     private InfoComponent infoComponent;
 
-    @Autowired
-    private AssistComponent assistComponent;
-
 
     @PostConstruct
     private void init() {
@@ -90,6 +87,7 @@ public class GatewayCache {
             genericCache = Caffeine.newBuilder().maximumSize(1_000)
                     .expireAfterWrite(expireAfterWrite, TimeUnit.MINUTES)
                     .refreshAfterWrite(refreshAfterWrite, TimeUnit.MINUTES)
+                    .removalListener(this::invokeRemove)
                     .build(this::invokeCache);
         }
         if (null == tokenCache) {
@@ -98,15 +96,6 @@ public class GatewayCache {
                     .refreshAfterWrite(refreshAfterWrite, TimeUnit.MINUTES)
                     .build(this::tokenCache);
         }
-
-        assistComponent.listener((channel, msg) -> genericCache.invalidate(msg), InvokeKey.class);
-        assistComponent.listener((channel, msg) -> {
-            for (InjectEnum inject : InjectEnum.values()) {
-                final TokenKey key = (TokenKey) msg;
-                key.setInject(inject.method());
-                tokenCache.invalidate(key);
-            }
-        }, TokenKey.class);
     }
 
     public InvokeDetailCache invokeCache(InvokeKey key) {
@@ -154,11 +143,19 @@ public class GatewayCache {
             reference.setConsumer(consumerConfig);
             reference.setGeneric(true);
 
-            present = new InvokeDetailCache(reference.get(), names.toArray(new String[0]), types.toArray(new String[0]),
-                    methodSimple.getIsWhitelist(), methodSimple.getCacheTime(), injectParam);
+            present = new InvokeDetailCache(names.toArray(new String[0]), types.toArray(new String[0]),
+                    methodSimple.getIsWhitelist(), methodSimple.getCacheTime(), methodSimple.getIsTrack(), reference, injectParam);
             genericCache.put(key, present);
         }
         return present;
+    }
+
+    public void invokeRemove(InvokeKey key, InvokeDetailCache cache, RemovalCause cause) {
+        log.info("[GATEWAY] 网关缓存[{}]将被移除[{}]", key, cause);
+        final ReferenceConfig<GenericService> reference = cache.getReference();
+        if (null != reference) {
+            reference.destroy();
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -185,13 +182,17 @@ public class GatewayCache {
 
             try {
                 final InvokeDetailCache invokeDetailCache = invokeCache(new InvokeKey(key.getGroup(), inject, 1), true);
-                present = (Map) invokeDetailCache.getService().$invoke(StringUtil.splitLastByDot(inject),
+                present = (Map) invokeDetailCache.getReference().get().$invoke(StringUtil.splitLastByDot(inject),
                         invokeDetailCache.getTypes(), new Object[]{token});
                 log.info("[GATEWAY] 用户获取完毕, 信息: {}", present);
 
                 tokenCache.put(key, present);
+            } catch (PassedException e) {
+                log.warn("[GATEWAY] {}", e.getMessage());
+
+                tokenCache.put(key, present);
             } catch (Exception e) {
-                log.warn("[GATEWAY] 获取用户信息出错: {}", e.getMessage());
+                log.warn("[GATEWAY] 获取用户信息出错: ", e);
             } finally {
                 setRpcContext(key.getTenant(), key.getGroup(), proof);
             }
@@ -207,5 +208,13 @@ public class GatewayCache {
         if (!PlatformConstants.DEFAULT_GROUP.equals(inputGroup) && CollectionUtil.notEmpty(dubboProvider.get(inputGroup))) {
             context.setAttachment(PlatformConstants.HANDGROUP_KEY, KryoBaseUtil.writeObjectToString(dubboProvider.get(inputGroup)));
         }
+    }
+
+    public Cache<InvokeKey, InvokeDetailCache> getGenericCache() {
+        return genericCache;
+    }
+
+    public Cache<TokenKey, Map<String, Object>> getTokenCache() {
+        return tokenCache;
     }
 }

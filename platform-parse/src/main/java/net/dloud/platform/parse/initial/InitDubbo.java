@@ -6,8 +6,8 @@ import com.alibaba.dubbo.config.ProtocolConfig;
 import com.alibaba.dubbo.config.ProviderConfig;
 import com.alibaba.dubbo.config.RegistryConfig;
 import lombok.extern.slf4j.Slf4j;
-import net.dloud.platform.parse.setting.DubboSetting;
-import net.dloud.platform.parse.utils.RunHost;
+import net.dloud.platform.extend.constant.StartupConstants;
+import net.dloud.platform.parse.dubbo.setting.DubboSetting;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -60,6 +60,7 @@ public class InitDubbo {
         ProtocolConfig protocolConfig = new ProtocolConfig();
         protocolConfig.setId(protocol.getId());
         protocolConfig.setName(protocol.getName());
+        protocolConfig.setHost(protocol.getHost());
         protocolConfig.setPort(protocol.getPort());
         protocolConfig.setSerialization(SERIALIZATION);
         //不注册类进来，否则顺序不一样序列化会出错
@@ -73,9 +74,6 @@ public class InitDubbo {
     public ProviderConfig providerConfig() {
         final DubboSetting.Provider provider = dubboSetting.getProvider();
         ProviderConfig providerConfig = new ProviderConfig();
-        if (RunHost.canUseDomain(RunHost.localHost, provider.getHost())) {
-            providerConfig.setHost(RunHost.localHost.getHostName());
-        }
         providerConfig.setThreads(provider.getThreads());
         providerConfig.setTimeout(provider.getTimeout());
         providerConfig.setWeight(provider.getWeight());

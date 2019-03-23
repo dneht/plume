@@ -1,8 +1,9 @@
 package net.dloud.platform.parse.initial;
 
 import lombok.extern.slf4j.Slf4j;
-import net.dloud.platform.parse.redisson.serialization.KeySerializer;
-import net.dloud.platform.parse.redisson.serialization.KryoSerializer;
+import net.dloud.platform.extend.assist.serialization.KeySerializer;
+import net.dloud.platform.extend.assist.serialization.KryoSerializer;
+import net.dloud.platform.extend.assist.serialization.LongSerializer;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.annotation.EnableCaching;
@@ -33,19 +34,7 @@ public class InitCache {
     public RedisTemplate<String, ?> redisTemplate(RedisConnectionFactory redisFactory) {
         final RedisTemplate<String, ?> template = new RedisTemplate<>();
         template.setConnectionFactory(redisFactory);
-        redisTemplateSet(template);
-        return template;
-    }
 
-    @Bean
-    public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory redisFactory) {
-        final StringRedisTemplate template = new StringRedisTemplate();
-        template.setConnectionFactory(redisFactory);
-        redisTemplateSet(template);
-        return template;
-    }
-
-    private void redisTemplateSet(RedisTemplate<String, ?> template) {
         final KeySerializer keySerializer = new KeySerializer();
         final RedisSerializer<?> stringSerializer = new StringRedisSerializer();
         final KryoSerializer kryoSerializer = new KryoSerializer();
@@ -59,5 +48,38 @@ public class InitCache {
         // hash value序列化
         template.setHashValueSerializer(kryoSerializer);
         template.afterPropertiesSet();
+        return template;
+    }
+
+    @Bean("stringRedisTemplate")
+    public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory redisFactory) {
+        final StringRedisTemplate template = new StringRedisTemplate();
+        template.setConnectionFactory(redisFactory);
+
+        final KeySerializer keySerializer = new KeySerializer();
+        final RedisSerializer<?> stringSerializer = new StringRedisSerializer();
+
+        // key序列化
+        template.setKeySerializer(keySerializer);
+        // value序列化
+        template.setValueSerializer(stringSerializer);
+        template.afterPropertiesSet();
+        return template;
+    }
+
+    @Bean("longRedisTemplate")
+    public RedisTemplate<String, Long> longRedisTemplate(RedisConnectionFactory redisFactory) {
+        RedisTemplate<String, Long> template = new RedisTemplate<>();
+        template.setConnectionFactory(redisFactory);
+
+        final KeySerializer keySerializer = new KeySerializer();
+        final LongSerializer longSerializer = new LongSerializer();
+
+        // key序列化
+        template.setKeySerializer(keySerializer);
+        // value序列化
+        template.setValueSerializer(longSerializer);
+        template.afterPropertiesSet();
+        return template;
     }
 }

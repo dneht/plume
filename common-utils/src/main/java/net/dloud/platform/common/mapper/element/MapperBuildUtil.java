@@ -1,5 +1,6 @@
 package net.dloud.platform.common.mapper.element;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -63,6 +64,8 @@ public class MapperBuildUtil {
 
     final static String ON_DUPLICATE_UPDATE = " on duplicate key update ";
 
+    final static String SET_UPDATE_NOW = "updated_at = now()";
+
     final static String AND_SOFT_DELETE = "deleted_at is null";
 
     final static String SET_SOFT_DELETE = "deleted_at = now()";
@@ -74,6 +77,10 @@ public class MapperBuildUtil {
 
     static boolean notEmpty(String[] input) {
         return Objects.nonNull(input) && input.length > 0;
+    }
+
+    static boolean notEmpty(List<String> input) {
+        return Objects.nonNull(input) && !input.isEmpty();
     }
 
     static <T> T stringJoin(T input, StringBuilder sentence, String split, String... joins) {

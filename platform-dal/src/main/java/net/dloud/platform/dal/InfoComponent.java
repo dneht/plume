@@ -92,6 +92,13 @@ public class InfoComponent implements MapperComponent {
             .where("group_name = :groupName", "invoke_name = :invokeName", "invoke_length = :invokeLength").build();
 
     /**
+     * 清除方法缓存
+     */
+    private final String clearMethodCacheSql = update(INFO_METHOD,
+            "method_data = null", "param_mock = null", "return_mock = null")
+            .where("group_name = :groupName", "system_id = :systemId").build();
+
+    /**
      * 类详情
      */
     private final String getClazzSql = select(INFO_CLAZZ)
@@ -136,7 +143,6 @@ public class InfoComponent implements MapperComponent {
             params(InfoClazzEntity.class), valuesBaseRemove(InfoClazzEntity.class, keys("groupName", "fullName", CREATED_AT))).build();
     private final String batchDeleteClazzSql = delete(INFO_CLAZZ)
             .where("group_name = :groupName", "full_name IN (<clazzNames>)").build();
-
     /**
      * 批量更新相同的方法
      */
@@ -144,7 +150,6 @@ public class InfoComponent implements MapperComponent {
             select(INFO_METHOD, ":newGroup, " + columnsBaseRemove((InfoMethodEntity.class), keys("groupName")) + ", now(), now()")
                     .where("group_name = :oldGroup", "system_id = :systemId", "clazz_name IN (<clazzNames>)"),
             valuesRemove(InfoMethodEntity.class, keys(DELETED_AT))).build();
-
     /**
      * 批量插入或更新方法
      */
@@ -156,7 +161,6 @@ public class InfoComponent implements MapperComponent {
             .where("group_name = :groupName", "invoke_name IN (<invokeNames>)").build();
     private final String batchDeleteMethodByClassSql = delete(INFO_METHOD)
             .where("group_name = :groupName", "clazz_name IN (<clazzNames>)").build();
-
 
     public List<InfoGroupEntity> findGroup(Handle handle, String group) {
         return handle.createQuery(findGroupSql)
@@ -252,6 +256,13 @@ public class InfoComponent implements MapperComponent {
                 .bind("methodData", methodData)
                 .bind("paramMock", paramMock)
                 .bind("returnMock", returnMock)
+                .execute();
+    }
+
+    public int clearMethodCache(Handle handle, String group, int systemId) {
+        return handle.createUpdate(clearMethodCacheSql)
+                .bind("groupName", group)
+                .bind("systemId", systemId)
                 .execute();
     }
 

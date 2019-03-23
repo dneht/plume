@@ -1,4 +1,4 @@
-package net.dloud.platform.parse.setting;
+package net.dloud.platform.parse.dubbo.setting;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -36,6 +36,8 @@ public class DubboSetting {
 
         private String name;
 
+        private String host;
+
         private Integer port;
     }
 
@@ -52,8 +54,6 @@ public class DubboSetting {
 
     @Data
     public static class Provider {
-        private String host;
-
         private Integer threads;
 
         private Integer timeout;

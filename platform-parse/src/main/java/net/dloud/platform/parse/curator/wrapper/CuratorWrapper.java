@@ -1,17 +1,14 @@
 package net.dloud.platform.parse.curator.wrapper;
 
 import com.alibaba.dubbo.common.utils.ConcurrentHashSet;
-import com.alibaba.dubbo.rpc.RpcContext;
 import lombok.extern.slf4j.Slf4j;
 import net.dloud.platform.common.extend.StringUtil;
-import net.dloud.platform.common.gateway.bean.StartupTime;
-import net.dloud.platform.common.serialize.KryoBaseUtil;
 import net.dloud.platform.extend.constant.PlatformConstants;
 import net.dloud.platform.extend.constant.StartupConstants;
 import net.dloud.platform.extend.exception.InnerException;
 import net.dloud.platform.parse.curator.listener.ListenerExecutor;
-import net.dloud.platform.parse.utils.RunHost;
-import org.apache.curator.RetryPolicy;
+import net.dloud.platform.parse.dubbo.wrapper.DubboWrapper;
+import net.dloud.platform.parse.utils.AddressGet;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.imps.CuratorFrameworkState;
@@ -19,7 +16,6 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
 
 import java.util.Set;
@@ -36,19 +32,20 @@ public class CuratorWrapper {
 
 
     public static String currentPath(String inputHost, Integer inputPort) {
-        final RpcContext context = RpcContext.getContext();
-        String localHost = context.getLocalHost();
-        if (RunHost.canUseDomain(RunHost.localHost, inputHost)) {
+        final String localHost;
+        if (StartupConstants.IS_PUBLIC) {
             localHost = inputHost;
+        } else {
+            localHost = AddressGet.getByDubbo();
         }
         return localHost + ":" + inputPort;
     }
 
     public static synchronized CuratorFramework initClient() {
         if (null == curatorClient) {
-            final RetryPolicy retryPolicy = new ExponentialBackoffRetry(PlatformConstants.ZK_SLEEP_TIME, PlatformConstants.ZK_MAX_RETRIES);
-            try (CuratorFramework client = CuratorFrameworkFactory.newClient(PlatformConstants.ZK_ADDRESS, retryPolicy)) {
-                curatorClient = client;
+            try {
+                curatorClient = CuratorFrameworkFactory.newClient(PlatformConstants.ZK_ADDRESS,
+                        new ExponentialBackoffRetry(PlatformConstants.ZK_SLEEP_TIME, PlatformConstants.ZK_MAX_RETRIES));
             } catch (Exception e) {
                 log.error("[{}] ZK初始化失败: {}, {}", PlatformConstants.APPNAME, e.getMessage(), e);
                 throw new InnerException("初始化资源失败");
@@ -97,10 +94,7 @@ public class CuratorWrapper {
                     log.info("[{}] 当前节点({})已存在, 删除重建", PlatformConstants.APPNAME, currentPath);
                     curatorClient.delete().forPath(currentPath);
                 }
-                curatorClient.create().creatingParentContainersIfNeeded().withMode(CreateMode.EPHEMERAL)
-                        .forPath(currentPath, KryoBaseUtil.writeObjectToByteArray(new StartupTime(
-                                PlatformConstants.APPID, PlatformConstants.APPKEY,
-                                StartupConstants.SERVER_PORT, StartupConstants.DUBBO_PORT)));
+                DubboWrapper.nodeCreate(curatorClient, currentPath);
             }
             PathChildrenCache cache = new PathChildrenCache(curatorClient, basePath, false);
             cache.start();

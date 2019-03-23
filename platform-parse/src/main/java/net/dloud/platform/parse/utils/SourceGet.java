@@ -2,8 +2,8 @@ package net.dloud.platform.parse.utils;
 
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
+import net.dloud.platform.extend.assist.serialization.KryoCodec;
 import net.dloud.platform.extend.constant.PlatformConstants;
-import net.dloud.platform.parse.redisson.serialization.KryoCodec;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
@@ -23,10 +23,12 @@ import java.util.List;
  **/
 @Slf4j
 public class SourceGet {
-    private static final String redisPre = "redis://";
     private static final String comma = ",";
     private static final String colon = ":";
+    private static final String redisPre = "redis://";
+
     public static ThreadLocal<String> kafkaProof = new ThreadLocal<>();
+    public static ThreadLocal<String> clientFrom = new ThreadLocal<>();
 
 
     public static LettuceConnectionFactory getLettuceFactory(String url, String pwd) {

@@ -305,7 +305,7 @@ public class CustomRouterFunction {
             invokeParams.add(getParam);
         }
 
-        Object result = invokeDetailCache.getService().$invoke(methodName, invokeDetailCache.getTypes(), invokeParams.toArray());
+        Object result = invokeDetailCache.getReference().get().$invoke(methodName, invokeDetailCache.getTypes(), invokeParams.toArray());
         if (null == result) {
             throw new PassedException(PlatformExceptionEnum.RESULT_ERROR);
         }

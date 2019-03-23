@@ -1,9 +1,13 @@
 package net.dloud.platform.common.mapper.element;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static net.dloud.platform.common.mapper.element.MapperBuildUtil.COMMA;
 import static net.dloud.platform.common.mapper.element.MapperBuildUtil.DELETE;
 import static net.dloud.platform.common.mapper.element.MapperBuildUtil.SET;
 import static net.dloud.platform.common.mapper.element.MapperBuildUtil.SET_SOFT_DELETE;
+import static net.dloud.platform.common.mapper.element.MapperBuildUtil.SET_UPDATE_NOW;
 import static net.dloud.platform.common.mapper.element.MapperBuildUtil.UPDATE;
 import static net.dloud.platform.common.mapper.element.MapperBuildUtil.notEmpty;
 import static net.dloud.platform.common.mapper.element.MapperBuildUtil.stringJoin;
@@ -14,9 +18,12 @@ import static net.dloud.platform.common.mapper.element.MapperBuildUtil.stringJoi
  **/
 public class UpdateMapperElement implements BaseMapperElement {
     private StringBuilder sentence = new StringBuilder();
+    private List<String> updates = new ArrayList<>();
 
     private boolean force;
+    private String prefix;
     private String[] wheres;
+    private String[] values;
 
 
     public UpdateMapperElement() {
@@ -32,10 +39,20 @@ public class UpdateMapperElement implements BaseMapperElement {
         return this;
     }
 
-    public UpdateMapperElement update(TableMapperElement table, String... values) {
-        final int length = values.length;
+    public UpdateMapperElement soft(String prefix) {
+        this.prefix = prefix;
+        return this;
+    }
+
+    public UpdateMapperElement update(TableMapperElement table) {
         sentence.append(UPDATE).append(table.build()).append(SET);
-        return stringJoin(this, sentence, length, COMMA, values);
+        return this;
+    }
+
+    public UpdateMapperElement update(TableMapperElement table, String... values) {
+        this.values = values;
+        sentence.append(UPDATE).append(table.build()).append(SET);
+        return this;
     }
 
     public UpdateMapperElement softDelete(TableMapperElement table) {
@@ -43,9 +60,18 @@ public class UpdateMapperElement implements BaseMapperElement {
     }
 
     public UpdateMapperElement delete(TableMapperElement table) {
+        this.force = true;
         sentence.append(DELETE).append(table.build());
         return this;
     }
+
+    public UpdateMapperElement add(boolean cond, String set) {
+        if (cond) {
+            updates.add(set);
+        }
+        return this;
+    }
+
 
     public UpdateMapperElement where(String... wheres) {
         this.wheres = wheres;
@@ -54,8 +80,23 @@ public class UpdateMapperElement implements BaseMapperElement {
 
     @Override
     public String build() {
+        if (!force) {
+            updates.add(SET_UPDATE_NOW);
+        }
+        boolean empty = true;
+        if (notEmpty(updates)) {
+            empty = false;
+            sentence.append(String.join(COMMA, updates));
+        }
+        if (notEmpty(values)) {
+            if (!empty) {
+                sentence.append(COMMA);
+            }
+            stringJoin(this, sentence, values.length, COMMA, values);
+        }
+
         if (notEmpty(wheres)) {
-            sentence.append(new WhereMapperElement(force).where(wheres).build());
+            sentence.append(new WhereMapperElement(force).where(wheres).force(prefix).build());
         }
         return sentence.toString();
     }

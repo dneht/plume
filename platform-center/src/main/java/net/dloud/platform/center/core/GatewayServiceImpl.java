@@ -36,7 +36,9 @@ import net.dloud.platform.extend.constant.PlatformConstants;
 import net.dloud.platform.extend.exception.PassedException;
 import net.dloud.platform.extend.tuple.PairTuple;
 import net.dloud.platform.extend.wrapper.AssertWrapper;
+import net.dloud.platform.parse.kafka.SimpleMessage;
 import net.dloud.platform.parse.module.AssistComponent;
+import net.dloud.platform.parse.module.MessageComponent;
 import org.jdbi.v3.core.Jdbi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -79,7 +81,7 @@ public class GatewayServiceImpl implements GatewayService {
     private InfoComponent infoComponent;
 
     @Autowired
-    private AssistComponent assistComponent;
+    private MessageComponent messageComponent;
 
 
     @Override
@@ -189,7 +191,9 @@ public class GatewayServiceImpl implements GatewayService {
         if (!clazzVersion.isEmpty()) {
             mergeClazzAndMethod(result, groupInfo, clazzVersion, classList, versionClazz, versionMethod, now);
         }
-
+        // 清理当前系统的所有方法缓存
+        jdbi.withHandle(handle ->
+                infoComponent.clearMethodCache(handle, groupInfo.getGroupName(), groupInfo.getSystemId()));
         return result;
     }
 
@@ -364,11 +368,12 @@ public class GatewayServiceImpl implements GatewayService {
         //删除网关中的缓存
         try {
             if (!methodList.isEmpty()) {
+                final List<InvokeKey> invokeKeys = Lists.newArrayListWithExpectedSize(methodList.size());
                 for (InfoMethodEntity method : methodList) {
-                    final InvokeKey invokeKey = new InvokeKey(method.getGroupName(), method.getInvokeName(), method.getInvokeLength());
-                    final long num = assistComponent.publish(CenterEnum.GATEWAY_CENTER, invokeKey);
-                    log.info("[GATEWAY] 要删除网关中的缓存是: {}, 通知到的服务数={}", invokeKey, num);
+                    invokeKeys.add(new InvokeKey(method.getGroupName(), method.getInvokeName(), method.getInvokeLength()));
                 }
+                messageComponent.sendAll(CenterEnum.GATEWAY_CENTER, SimpleMessage.build("gatewayCacheClean", invokeKeys));
+                log.info("[GATEWAY] 要删除网关中的缓存是: {}", invokeKeys);
             }
         } catch (Exception e) {
             log.warn("[GATEWAY] 删除网关中的缓存失败: ", e);

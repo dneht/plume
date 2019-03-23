@@ -1,21 +1,17 @@
 package net.dloud.platform.gateway.conf;
 
-import com.alibaba.dubbo.common.utils.ConcurrentHashSet;
 import lombok.extern.slf4j.Slf4j;
-import net.dloud.platform.extend.constant.PlatformConstants;
 import net.dloud.platform.parse.curator.wrapper.CuratorWrapper;
 import net.dloud.platform.parse.dubbo.wrapper.DubboWrapper;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
-import org.apache.zookeeper.data.Stat;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
-import java.util.Set;
-
-import static net.dloud.platform.parse.dubbo.wrapper.DubboWrapper.DUBBO_GROUP_PATH;
 import static net.dloud.platform.parse.dubbo.wrapper.DubboWrapper.DUBBO_ZK_PATH;
 import static net.dloud.platform.parse.dubbo.wrapper.DubboWrapper.dubboProvider;
 
@@ -28,6 +24,10 @@ import static net.dloud.platform.parse.dubbo.wrapper.DubboWrapper.dubboProvider;
 public class CuratorListener implements ApplicationListener<ContextRefreshedEvent> {
     private CuratorFramework curatorClient = CuratorWrapper.getClient();
 
+    @Autowired
+    private ApplicationEventPublisher publisher;
+
+
     @Override
     public void onApplicationEvent(ContextRefreshedEvent refreshedEvent) {
         try {
@@ -39,10 +39,8 @@ public class CuratorListener implements ApplicationListener<ContextRefreshedEven
                     case CHILD_ADDED:
                         final String add = data.getPath().replaceFirst(DUBBO_ZK_PATH + "/", "");
                         final String basePath = DUBBO_ZK_PATH + "/" + add;
-                        if (!PlatformConstants.GROUP.equals(add)) {
-                            CuratorWrapper.addListeners(() -> CuratorWrapper.childrenCache(DubboWrapper.dubboListener
-                                    (add, basePath), null, basePath));
-                        }
+                        CuratorWrapper.addListeners(() -> CuratorWrapper.childrenCache(DubboWrapper.dubboListener
+                                (add, basePath), null, basePath));
                         log.info("[GATEWAY] 添加DUBBO GROUP: {}", add);
                         break;
                     case CHILD_REMOVED:

@@ -1,4 +1,4 @@
-package net.dloud.platform.parse.redisson.serialization;
+package net.dloud.platform.extend.assist.serialization;
 
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;

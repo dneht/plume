@@ -38,8 +38,8 @@ public class InitGateway {
             try {
                 final String version = new String(ResourceGet.resourceFile2Byte(PARSE_PATH + "version"));
                 log.info("[{}] 开始初始化网关, 当前版本({})", PlatformConstants.APPNAME, version);
-                final GroupEntry groupInfo = new GroupEntry(PlatformConstants.APPID, PlatformConstants.APPNAME, PlatformConstants.MODE,
-                        PlatformConstants.GROUP, PlatformConstants.LOCAL_HOST_IP + ":" + StartupConstants.SERVER_PORT, version);
+                final GroupEntry groupInfo = new GroupEntry(PlatformConstants.APPID, PlatformConstants.APPNAME, StartupConstants.RUN_MODE,
+                        PlatformConstants.GROUP, StartupConstants.RUN_HOST + ":" + StartupConstants.SERVER_PORT, version);
                 final GatewayGroupResult groupResult = gateway.groupInfo(groupInfo);
                 if (null != groupResult && groupResult.isSuccess() && !groupResult.isConsistent()) {
                     log.info("[{}] 开始初始化网关, 是否是新组({})", PlatformConstants.APPNAME, groupResult.isNewgroup());
