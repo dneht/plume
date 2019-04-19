@@ -34,3 +34,9 @@
 ![](quickstart/process.png)
 
 # [版本记录](changelog.md)
+
+# 启动注入
+具体可查看 DloudApplicationContextInitializer，主要是处理启动时的系统参数  
+
+1. pub=[true|false] 选择网络模式
+2. port=\d+(-\d+)? 端口号，不输入则http固定为20000、dubbo固定为20880；如果只输入数字，则视为单独指定来http端口；如果是带上-（如20000-200010），则视为一个范围
