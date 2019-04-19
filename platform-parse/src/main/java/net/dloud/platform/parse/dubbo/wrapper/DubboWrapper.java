@@ -13,9 +13,11 @@ import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -69,7 +71,7 @@ public class DubboWrapper {
                             PlatformConstants.APPID, PlatformConstants.APPKEY,
                             StartupConstants.SERVER_PORT, StartupConstants.DUBBO_PORT)));
         } catch (Exception e) {
-            log.error("[{}] 新建CURATOR节点失败: {}, {}, {}", PlatformConstants.APPNAME, currentPath, e.getMessage());
+            log.error("[{}] 新建CURATOR节点失败: {}, {}", PlatformConstants.APPNAME, currentPath, e.getMessage());
         }
     }
 
@@ -87,15 +89,26 @@ public class DubboWrapper {
                     break;
                 case CHILD_ADDED:
                     final String add = data.getPath().replaceFirst(basePath + "/", "");
-                    availableProvider.put(add, KryoBaseUtil.readObjectFromByteArray(client.getData().forPath(data.getPath()), StartupTime.class));
+                    final StartupTime startup = KryoBaseUtil.readObjectFromByteArray(client.getData().forPath(data.getPath()), StartupTime.class);
+                    availableProvider.put(add, startup);
                     log.info("[PLATFORM] 节点[{}]加入GROUP[{}]", add, group);
                     break;
                 case CHILD_REMOVED:
                     final String del = data.getPath().replaceFirst(basePath + "/", "");
-                    final Stat stat = client.getState() == CuratorFrameworkState.STARTED ? client.checkExists().forPath(data.getPath()) : null;
-                    if (null == stat) {
-                        availableProvider.remove(del);
-                        log.info("[PLATFORM] 节点[{}]移出GROUP[{}]", del, group);
+                    if (client.getState() == CuratorFrameworkState.STARTED) {
+                        final Stat stat = client.checkExists().forPath(data.getPath());
+                        if (null == stat) {
+                            availableProvider.remove(del);
+                            log.info("[PLATFORM] 节点[{}]移出GROUP[{}]", del, group);
+                            final String currentPath = currentPath();
+                            if (Objects.equals(currentPath, data.getPath())) {
+                                final Stat now = client.checkExists().forPath(currentPath);
+                                if (null == now) {
+                                    log.info("[{}] 节点({})不存在, 需要重建", PlatformConstants.APPNAME, currentPath);
+                                    nodeCreate(client, currentPath);
+                                }
+                            }
+                        }
                     }
                     break;
                 default:

@@ -97,4 +97,19 @@ public class MapperBuildUtil {
         }
         return input;
     }
+
+    static <T> T stringJoin(T input, StringBuilder sentence, String split, List<String> joins) {
+        final int length = joins.size();
+        return stringJoin(input, sentence, length, split, joins);
+    }
+
+    static <T> T stringJoin(T input, StringBuilder sentence, int length, String split, List<String> joins) {
+        for (int i = 0; i < length; i++) {
+            sentence.append(joins.get(i));
+            if (i < length - 1) {
+                sentence.append(split);
+            }
+        }
+        return input;
+    }
 }

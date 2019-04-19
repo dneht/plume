@@ -1,5 +1,6 @@
 package net.dloud.platform.common.domain.result;
 
+import com.amazonaws.util.CollectionUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -45,30 +46,36 @@ public class PageResult<T> extends BaseResult {
 
     public static <T> PageResult<T> build(PageEntry pageEntry, Long totalNum) {
         final PageResult<T> result = new PageResult<>();
-        if (null != pageEntry && totalNum > 0) {
+        if (null != pageEntry) {
             Integer pageSize = pageEntry.getPageSize();
-            Long totalPageNum = totalNum / pageSize;
-            if (totalNum % pageSize != 0) {
-                totalPageNum += 1;
+            if (totalNum > 0) {
+                Long totalPageNum = totalNum / pageSize;
+                if (totalNum % pageSize != 0) {
+                    totalPageNum += 1;
+                }
+                result.setTotalPageNum(totalPageNum);
+                result.setTotalNum(totalNum);
             }
-            result.setTotalPageNum(totalPageNum);
-            result.setTotalNum(totalNum);
             result.setPageSize(pageSize);
-            result.setResults(Collections.emptyList());
         }
+        result.setResults(Collections.emptyList());
         return result;
     }
 
     public static <T> PageResult<T> build(PageEntry pageEntry, Long totalNum, List<T> values) {
         final PageResult<T> result = build(pageEntry, totalNum);
-        result.setResults(values);
+        if (null != values) {
+            result.setResults(values);
+        }
         return result;
     }
 
     public static <T> PageResult<T> build(String code, PageEntry pageEntry, Long totalNum, List<T> values) {
         final PageResult<T> result = build(pageEntry, totalNum);
         result.setCode(code);
-        result.setResults(values);
+        if (null != values) {
+            result.setResults(values);
+        }
         return result;
     }
 

@@ -24,6 +24,7 @@ import net.dloud.platform.extend.wrapper.AssertWrapper;
 import net.dloud.platform.parse.initial.InitGateway;
 import net.dloud.platform.parse.utils.AopTargetUtil;
 import net.dloud.platform.parse.utils.ApiTestUtil;
+import net.dloud.platform.parse.utils.InitialiseUtil;
 import net.dloud.platform.parse.utils.ResourceGet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -85,16 +86,16 @@ public class GatewayController {
 
 
     @PostMapping("/gateway")
-    public Mono<String> invoke(Boolean type) {
-        return Mono.fromSupplier(() -> {
-            final Boolean isNew = null == type ? Boolean.FALSE : type;
-            final GroupEntry groupInfo = new GroupEntry(PlatformConstants.APPID, PlatformConstants.APPNAME, StartupConstants.RUN_MODE,
-                    PlatformConstants.GROUP, StartupConstants.RUN_HOST + ":" + StartupConstants.SERVER_PORT, "");
+    public String gateway(Boolean type) {
+        final Boolean isNew = null == type ? Boolean.FALSE : type;
+        final GroupEntry groupInfo = new GroupEntry(PlatformConstants.APPID, PlatformConstants.APPNAME,
+                StartupConstants.RUN_MODE, PlatformConstants.GROUP, "");
 
-            final byte[] index = ResourceGet.resourceFile2Byte(InitGateway.PARSE_PATH + "index");
-            final GatewayMethodResult result = gateway.clazzInfo(groupInfo, isNew, index);
-            return result.getCode();
-        });
+        final String parsePath = PlatformConstants.PARSE_BASE_PATH + PlatformConstants.APPID + "/";
+        final byte[][] list = ResourceGet.resourceMulti2Byte(parsePath + "index");
+
+        InitialiseUtil.classResult(gateway, parsePath, groupInfo, isNew, list.length == 1);
+        return parsePath;
     }
 
     @PostMapping("/api")

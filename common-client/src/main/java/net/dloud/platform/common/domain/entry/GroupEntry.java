@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import net.dloud.platform.common.domain.BaseEntry;
 
+import java.io.Serializable;
+
 /**
  * @author QuDasheng
  * @create 2018-09-11 11:51
@@ -36,11 +38,6 @@ public class GroupEntry extends BaseEntry {
      * 组名
      */
     private String groupName;
-
-    /**
-     * 当前ip
-     */
-    private String currentIp;
 
     /**
      * 版本名

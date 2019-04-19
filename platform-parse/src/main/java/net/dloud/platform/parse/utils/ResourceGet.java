@@ -1,7 +1,9 @@
 package net.dloud.platform.parse.utils;
 
 import lombok.extern.slf4j.Slf4j;
+import net.dloud.platform.extend.constant.StartupConstants;
 import net.dloud.platform.extend.exception.InnerException;
+import net.dloud.platform.parse.boot.DloudURLClassloader;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -18,6 +20,9 @@ import java.io.InputStream;
  **/
 @Slf4j
 public class ResourceGet {
+    private static DloudURLClassloader dloudURLClassloader;
+
+
     public static byte[] resource2Byte(ClassPathResource input) {
         log.info("[COMMON] 开始读取文件 {}", input.getPath());
         try (InputStream is = input.getInputStream()) {
@@ -28,13 +33,20 @@ public class ResourceGet {
     }
 
     public static byte[] resourceFile2Byte(String path) {
-        return resourceFile2Byte(path, 0);
+        return resourceFile2Byte(patternResolver(), path);
     }
 
-    public static byte[] resourceFile2Byte(String path, int idx) {
-        ResourcePatternResolver patternResolver = new PathMatchingResourcePatternResolver();
+    public static byte[] resourceFile2Byte(ClassLoader loader, String path) {
+        return resourceFile2Byte(new PathMatchingResourcePatternResolver(loader), path);
+    }
+
+    public static byte[] resourceFile2Byte(ResourcePatternResolver resolver, String path) {
+        return resourceFile2Byte(resolver, path, 0);
+    }
+
+    public static byte[] resourceFile2Byte(ResourcePatternResolver resolver, String path, int idx) {
         try {
-            Resource[] resources = patternResolver.getResources(path);
+            Resource[] resources = resolver.getResources(path);
             if (resources.length <= 0) {
                 throw new InnerException("输入路径不存在");
             }
@@ -52,9 +64,16 @@ public class ResourceGet {
     }
 
     public static byte[][] resourceMulti2Byte(String path) {
-        ResourcePatternResolver patternResolver = new PathMatchingResourcePatternResolver();
+        return resourceMulti2Byte(patternResolver(), path);
+    }
+
+    public static byte[][] resourceMulti2Byte(ClassLoader loader, String path) {
+        return resourceMulti2Byte(new PathMatchingResourcePatternResolver(loader), path);
+    }
+
+    public static byte[][] resourceMulti2Byte(ResourcePatternResolver resolver, String path) {
         try {
-            Resource[] resources = patternResolver.getResources(path);
+            Resource[] resources = resolver.getResources(path);
             if (resources.length <= 0) {
                 throw new InnerException("输入路径不存在");
             }
@@ -93,5 +112,19 @@ public class ResourceGet {
         byte[] buffer = new byte[is.available()];
         is.read(buffer);
         return buffer;
+    }
+
+    private static PathMatchingResourcePatternResolver patternResolver() {
+        if (null != dloudURLClassloader) {
+            return new PathMatchingResourcePatternResolver(dloudURLClassloader);
+        }
+
+        if (null == StartupConstants.RUN_LIBS) {
+            return new PathMatchingResourcePatternResolver();
+        } else {
+            dloudURLClassloader = DloudURLClassloader
+                    .getInstance(StartupConstants.RUN_LIBS, ClassLoader.getSystemClassLoader());
+            return new PathMatchingResourcePatternResolver(dloudURLClassloader);
+        }
     }
 }

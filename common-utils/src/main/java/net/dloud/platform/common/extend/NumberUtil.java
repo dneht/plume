@@ -112,4 +112,32 @@ public class NumberUtil {
 
         return def;
     }
+
+    public static Integer gtZero(Integer input) {
+        if (null == input || input <= 0) {
+            return 0;
+        }
+        return input;
+    }
+
+    public static int gtZero(int input) {
+        if (input <= 0) {
+            return 0;
+        }
+        return input;
+    }
+
+    public static Long gtZero(Long input) {
+        if (null == input || input <= 0) {
+            return 0L;
+        }
+        return input;
+    }
+
+    private static long gtZero(long input) {
+        if (input <= 0) {
+            return 0;
+        }
+        return input;
+    }
 }

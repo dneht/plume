@@ -5,7 +5,7 @@
     <parent>
         <groupId>net.dloud.stand</groupId>
         <artifactId>stand-all</artifactId>
-        <version>0.7.0.0</version>
+        <version>0.7.2.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>

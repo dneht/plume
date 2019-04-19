@@ -75,6 +75,11 @@ public class InfoApi {
         return Mono.just(DubboWrapper.dubboProvider);
     }
 
+    @RequestMapping(value = "/refresh_doc")
+    public Mono<Integer> refresh_doc(String group, Integer system) {
+        return Mono.just(jdbi.withHandle(handle -> infoComponent.clearMethodCache(handle, checkGroup(group), system)));
+    }
+
     @RequestMapping(value = "/group_list")
     public Flux<Map<String, Object>> group_list(String group) {
         return Flux.fromStream(

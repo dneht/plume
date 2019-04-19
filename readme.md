@@ -17,13 +17,14 @@
 5. [网关针对用户或ip的限流(令牌桶)](quickstart/i5.token-bucket.md)
 6. [网关文档和mock数据](quickstart/i6.doc-and-mock.md)
 7. [各系统的数据源由平台统一管理](quickstart/i7.source-by-platform.md)
-8. [Redis、Kafka、Job的封装，具体使用见上](quickstart/i8.module-component.md)
+8. [redis、kafka、job的封装，具体使用见上](quickstart/i8.module-component.md)
 9. [基于数据库的序列生成器](quickstart/i9.sequence-component.md)
 10. [调试时使用的模拟网关](quickstart/i10.simple-gateway.md)
 11. [简单的调用日志链路](quickstart/i11.simple-call-link.md)
 12. [优雅关机(只有tomcat和undertow)](quickstart/i12.graceful-shutdown.md)
 13. [开启Security(内存用户)](quickstart/i13.spring-security-simple.md)
 14. [K8S部分支持说明](quickstart/i14.k8s-support.md)
+15. [http动态路由支持](quickstart/i15.http-router.md)
 
 ## 未实现部分
 1. 接口签名具体实现
@@ -32,13 +33,4 @@
 ## 附上主流程
 ![](quickstart/process.png)
 
-# 版本记录
-## 0.7.0.0 (19.03.15)
-1. spring boot -> 2.1.3.RELEASE | dubbo -> 2.6.6
-2. kafka添加all模式，可以发送给当前topic下的所有消费者
-3. 网关中的dubbo reference失效时执行其destroy方法
-4. 添加对于k8s的部分支持
-5. 修改启动时的端口选择及常量
-6. 修复本地网关缓存清理不及时造成的调用问题
-7. 修复及优化MapperComponent
-8. 其它结构调整及修改
+# [版本记录](changelog.md)

@@ -1,6 +1,7 @@
 package net.dloud.platform.gateway.pack;
 
 import lombok.extern.slf4j.Slf4j;
+import net.dloud.platform.extend.wrapper.ValueWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -20,13 +21,13 @@ public class MethodResultCache {
     private RedisTemplate<String, Object> redisTemplate;
 
 
-    public Object getValue(String method, Object param, String tenant, String group) {
-        return redisTemplate.opsForValue().get(method + separator + tenant + separator + group
+    public Object getValue(String method, Object param, String tenant, String group, String token) {
+        return redisTemplate.opsForValue().get(method + separator + tenant + separator + group + separator + ValueWrapper.ifEmpty(token)
                 + separator + param.hashCode());
     }
 
-    public void setValue(String method, Object param, String tenant, String group, Object value, int time) {
-        redisTemplate.opsForValue().set(method + separator + tenant + separator + group
+    public void setValue(String method, Object param, String tenant, String group, String token, Object value, int time) {
+        redisTemplate.opsForValue().set(method + separator + tenant + separator + group + separator + ValueWrapper.ifEmpty(token)
                 + separator + param.hashCode(), value, time, TimeUnit.MINUTES);
     }
 }

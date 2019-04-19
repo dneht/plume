@@ -18,6 +18,7 @@ import net.dloud.platform.common.serialize.KryoBaseUtil;
 import net.dloud.platform.extend.constant.PlatformConstants;
 import org.apache.curator.shaded.com.google.common.collect.Lists;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +64,7 @@ public class SoftLoadBalanceImpl implements LoadBalance {
             String handGroup = RpcContext.getContext().getAttachment(PlatformConstants.HANDGROUP_KEY);
             if (null != handGroup) {
                 try {
-                    availableProvider = KryoBaseUtil.readObjectFromString(handGroup, Set.class);
+                    availableProvider = KryoBaseUtil.readObjectFromString(handGroup, HashSet.class);
                     log.info("[PLATFORM] 获取附加分组列表: {}", availableProvider);
                 } catch (Exception e) {
                     log.warn("[PLATFORM] 获取附加分组列表失败: {}", e.getMessage());
@@ -74,7 +75,7 @@ public class SoftLoadBalanceImpl implements LoadBalance {
         List<Invoker<T>> invokerList = Lists.newArrayListWithExpectedSize(length);
         //如果输入分组无可用，调用当前服务分组
         if (CollectionUtil.isEmpty(availableProvider)) {
-            log.info("[PLATFORM] 路由[DUBBO]服务: {}, 输入分组[{}]无可用服务，调用当前服务分组[{}]", methodName, thisGroup, PlatformConstants.GROUP);
+            log.info("[PLATFORM] 路由[DUBBO]服务: {}, 输入分组[{}]无可用服务，调用默认服务分组[{}]", methodName, thisGroup, PlatformConstants.GROUP);
             thisGroup = PlatformConstants.GROUP;
             availableProvider = dubboProvider.get(PlatformConstants.GROUP).keySet();
         }

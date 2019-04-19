@@ -1,5 +1,6 @@
 package net.dloud.platform.common.mapper;
 
+import net.dloud.platform.common.domain.shape.Point;
 import net.dloud.platform.common.mapper.element.InsertMapperElement;
 import net.dloud.platform.common.mapper.element.SelectMapperElement;
 import net.dloud.platform.common.mapper.element.TableMapperElement;
@@ -104,10 +105,32 @@ public interface MapperComponent extends BaseComponent {
         return new UnionMapperElement().unionAll(elements);
     }
 
+    /**
+     * 获取点
+     *
+     * @param latitude  纬度，0-90
+     * @param longitude 经度，如120
+     */
+    default String point(String latitude, String longitude) {
+        return String.format("ST_GeomFromText('POINT(%s %s)', 4326)", latitude, longitude);
+    }
+
+    default String point(Point point) {
+        return String.format("ST_GeomFromText('POINT(%s %s)', 4326)", point.getLatitude(), point.getLongitude());
+    }
+
+    /**
+     * 来源分片键
+     */
     default String source() {
         return null;
     }
 
+    /**
+     * 来源分片后的表名
+     *
+     * @param name 分片之前的表名
+     */
     default TableMapperElement table(String name) {
         return new TableMapperElement(name, source());
     }

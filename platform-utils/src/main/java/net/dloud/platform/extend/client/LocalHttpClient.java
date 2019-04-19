@@ -26,7 +26,7 @@ public class LocalHttpClient {
     private static final Logger log = LoggerFactory.getLogger(LocalHttpClient.class);
     private static int timeout = 8000;
     private static int retryExecutionCount = 2;
-    protected static CloseableHttpClient httpClient = HttpClientFactory.createHttpClient(100, 10, timeout, retryExecutionCount);
+    protected static CloseableHttpClient httpClient = HttpClientFactory.createHttpClient(800, 400, timeout, retryExecutionCount);
     private static ResultErrorHandler resultErrorHandler;
 
     /**

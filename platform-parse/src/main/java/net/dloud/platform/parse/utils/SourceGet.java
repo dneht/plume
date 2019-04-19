@@ -2,12 +2,7 @@ package net.dloud.platform.parse.utils;
 
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
-import net.dloud.platform.extend.assist.serialization.KryoCodec;
 import net.dloud.platform.extend.constant.PlatformConstants;
-import org.redisson.Redisson;
-import org.redisson.api.RedissonClient;
-import org.redisson.config.Config;
-import org.redisson.config.TransportMode;
 import org.springframework.data.redis.connection.RedisClusterConfiguration;
 import org.springframework.data.redis.connection.RedisNode;
 import org.springframework.data.redis.connection.RedisPassword;
@@ -51,32 +46,6 @@ public class SourceGet {
             conf.setPassword(RedisPassword.of(pwd));
             return new LettuceConnectionFactory(conf);
         }
-    }
-
-    public static RedissonClient getRedissonClient(String url, String pwd) {
-        url = url.replaceFirst(redisPre, "");
-        Config config = new Config();
-        final String os = System.getProperty("os.name", "").toLowerCase();
-        if (os.contains("linux")) {
-            config.setTransportMode(TransportMode.EPOLL);
-        } else if (os.contains("mac")) {
-            config.setTransportMode(TransportMode.KQUEUE);
-        }
-        config.setCodec(new KryoCodec());
-
-        if (url.contains(comma)) {
-            final String[] split = url.split(comma);
-            final String[] nodes = new String[split.length];
-            for (int i = 0; i < split.length; i++) {
-                nodes[i] = redisPre + split[i];
-            }
-            config.useClusterServers().addNodeAddress(nodes).setPassword(pwd);
-            return Redisson.create(config);
-        } else {
-            config.useSingleServer().setAddress(redisPre + url).setPassword(pwd);
-            return Redisson.create(config);
-        }
-
     }
 
     public static HikariDataSource getHikariSource(String url, String user, String pwd, String drive) {

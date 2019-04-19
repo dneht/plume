@@ -31,6 +31,13 @@ public interface GatewayService {
     GatewayMethodResult clazzInfo(GroupEntry groupInfo, boolean newGroup, byte[] clazzInfo);
 
     /**
+     * 返回需要更新的方法列表
+     *
+     * @return
+     */
+    GatewayMethodResult clazzInfo(GroupEntry groupInfo, boolean newGroup, byte[] clazzInfo, int[] offsetInfo);
+
+    /**
      * 更新并返回更新失败的方法列表
      *
      * @return

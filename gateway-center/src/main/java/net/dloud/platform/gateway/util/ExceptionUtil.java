@@ -2,7 +2,9 @@ package net.dloud.platform.gateway.util;
 
 import com.alibaba.dubbo.rpc.RpcException;
 import com.alibaba.dubbo.rpc.service.GenericException;
+import com.fasterxml.jackson.core.JsonParseException;
 import lombok.extern.slf4j.Slf4j;
+import net.dloud.platform.common.extend.StringUtil;
 import net.dloud.platform.common.gateway.bean.ApiResponse;
 import net.dloud.platform.extend.constant.PlatformExceptionEnum;
 import net.dloud.platform.extend.exception.InnerException;
@@ -22,6 +24,10 @@ import java.util.UUID;
  **/
 @Slf4j
 public class ExceptionUtil {
+    public static ApiResponse handleReq(Throwable ex) {
+        return handle(ex);
+    }
+
     public static Mono<ApiResponse> handleOne(Throwable ex) {
         return Mono.just(handle(ex));
     }

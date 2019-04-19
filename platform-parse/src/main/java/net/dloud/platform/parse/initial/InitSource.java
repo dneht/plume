@@ -13,7 +13,6 @@ import net.dloud.platform.extend.constant.StartupConstants;
 import net.dloud.platform.extend.exception.InnerException;
 import net.dloud.platform.parse.utils.SourceGet;
 import org.jdbi.v3.core.Jdbi;
-import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -57,10 +56,10 @@ public class InitSource {
 
 
     @PostConstruct
-    private void init() {
+    private void initSource() {
         final PairResult<byte[], byte[]> source = sourceInit.getSource(new GroupEntry(
                 PlatformConstants.APPID, PlatformConstants.APPNAME, StartupConstants.RUN_MODE,
-                PlatformConstants.GROUP, StartupConstants.RUN_HOST + ":" + StartupConstants.SERVER_PORT, ""));
+                PlatformConstants.GROUP, ""));
         if (null != source && source.isSuccess()) {
             enckey = source.getFirst();
             keystore = KryoBaseUtil.readFromByteArray(source.getLast());
@@ -82,25 +81,6 @@ public class InitSource {
                     Twins.decrypt(keystore.getPassword(), enckey));
         } catch (Exception e) {
             log.error("[{}] REDIS初始化失败: {}, {}", PlatformConstants.APPNAME, e.getMessage(), e);
-            throw new InnerException("初始化资源失败");
-        }
-    }
-
-    /**
-     * 创建Redisson
-     */
-    @Bean
-    public RedissonClient redissonClient() {
-        try {
-            final KeystoreResult keystore = this.keystore.get(PlatformConstants.SOURCE_REDIS);
-            if (null == keystore) {
-                throw new InnerException("初始化资源失败");
-            }
-            return SourceGet.getRedissonClient(Twins.decrypt(keystore.getUrls(), enckey),
-                    Twins.decrypt(keystore.getPassword(), enckey));
-        } catch (Exception e) {
-            log.error("[{}] REDISSON初始化失败: {}", PlatformConstants.APPNAME, e.getMessage());
-            log.error("REDISSON初始化失败:", e);
             throw new InnerException("初始化资源失败");
         }
     }

@@ -37,7 +37,6 @@ import net.dloud.platform.extend.exception.PassedException;
 import net.dloud.platform.extend.tuple.PairTuple;
 import net.dloud.platform.extend.wrapper.AssertWrapper;
 import net.dloud.platform.parse.kafka.SimpleMessage;
-import net.dloud.platform.parse.module.AssistComponent;
 import net.dloud.platform.parse.module.MessageComponent;
 import org.jdbi.v3.core.Jdbi;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +44,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -88,15 +88,12 @@ public class GatewayServiceImpl implements GatewayService {
     public GatewayGroupResult groupInfo(GroupEntry groupInfo) {
         final String groupName = groupInfo.getGroupName();
         AssertWrapper.notBlank(groupName, "分组信息不能为空");
-        final String currentIp = groupInfo.getCurrentIp();
-        AssertWrapper.notBlank(currentIp, "主机信息不能为空");
         final String versionInfo = groupInfo.getVersionInfo();
         AssertWrapper.notBlank(versionInfo, "版本信息不能为空");
 
         final Timestamp now = Timestamp.from(Instant.now());
         final GatewayGroupResult result = new GatewayGroupResult();
 
-//        InterProcessLock lock = new InterProcessMutex(client, lockPath);
         final InfoGroupEntity info = jdbi.withHandle(handle ->
                 infoComponent.getGroup(handle, groupName, groupInfo.getSystemId()).orElse(new InfoGroupEntity()));
         log.info("[GATEWAY] 输入的组信息: {}, 查询到的组信息: {}", groupInfo, info);
@@ -107,7 +104,6 @@ public class GatewayServiceImpl implements GatewayService {
             info.setSystemId(groupInfo.getSystemId());
             info.setSystemName(groupInfo.getSystemName());
             info.setVersionInfo(versionInfo);
-            info.setCurrentIp(convertField(Sets.newHashSet(currentIp)));
             info.setCreatedAt(now);
             info.setUpdatedAt(now);
             jdbi.withHandle(handle -> infoComponent.insertGroup(handle, info));
@@ -117,12 +113,6 @@ public class GatewayServiceImpl implements GatewayService {
                 result.setConsistent(true);
             } else {
                 info.setVersionInfo(versionInfo);
-            }
-            final Set<String> ips = readField(info.getCurrentIp());
-            if (!result.isConsistent() || !ips.contains(currentIp)) {
-                ips.add(currentIp);
-                log.info("[GATEWAY] 新的ip组数据: {}", ips);
-                info.setCurrentIp(convertField(ips));
                 info.setUpdatedAt(now);
                 jdbi.withHandle(handle -> infoComponent.updateGroup(handle, info));
             }
@@ -134,8 +124,22 @@ public class GatewayServiceImpl implements GatewayService {
 
     @Override
     public GatewayMethodResult clazzInfo(GroupEntry groupInfo, boolean newGroup, byte[] clazzInfo) {
-        final Map<String, String> indexInfos = KryoBaseUtil.readFromByteArray(clazzInfo, true, false);
+        return parseClazzInfo(groupInfo, newGroup, KryoBaseUtil.readFromByteArray(clazzInfo, true, false));
+    }
 
+    @Override
+    public GatewayMethodResult clazzInfo(GroupEntry groupInfo, boolean newGroup, byte[] clazzInfo, int[] offsetInfo) {
+        Map<String, String> indexInfos = Maps.newHashMap();
+        int start = 0;
+        for (int i = 0; i < offsetInfo.length; i++) {
+            final int offset = offsetInfo[i];
+            indexInfos.putAll(KryoBaseUtil.readFromByteArray(Arrays.copyOfRange(clazzInfo, start, offset), true, false));
+            start = offset;
+        }
+        return parseClazzInfo(groupInfo, newGroup, indexInfos);
+    }
+
+    public GatewayMethodResult parseClazzInfo(GroupEntry groupInfo, boolean newGroup, Map<String, String> indexInfos) {
         final GatewayMethodResult result = new GatewayMethodResult();
         if (newGroup) {
             if (PlatformConstants.DEFAULT_GROUP.equalsIgnoreCase(groupInfo.getGroupName())) {
@@ -228,7 +232,7 @@ public class GatewayServiceImpl implements GatewayService {
         jdbi.useTransaction(handle -> {
             //新组并且信息和基组一样的选择插入
             if (newGroup && !clazzExist.isEmpty()) {
-                log.info("[GATEWAY] 要插入的类信息", clazzExist);
+                log.info("[GATEWAY] 要插入的类信息: {}", clazzExist);
                 infoComponent.insertSelectClazz(handle, PlatformConstants.DEFAULT_GROUP, groupName,
                         systemId, clazzExist);
                 infoComponent.insertSelectMethod(handle, PlatformConstants.DEFAULT_GROUP, groupName,
@@ -237,7 +241,7 @@ public class GatewayServiceImpl implements GatewayService {
             //非新组并且查询到版本信息有多余的应该删除
             if (!newGroup && !versionClazz.isEmpty()) {
                 final List<String> clazzDelete = Lists.newArrayList(versionClazz.keySet());
-                log.info("[GATEWAY] 要删除的类信息", clazzDelete);
+                log.info("[GATEWAY] 要删除的类信息: {}", clazzDelete);
                 infoComponent.batchDeleteClazz(handle, groupName, clazzDelete);
                 infoComponent.batchDeleteMethodByClass(handle, groupName, clazzDelete);
             }
@@ -347,12 +351,12 @@ public class GatewayServiceImpl implements GatewayService {
             // 先删除后存储
             if (!existMethod.isEmpty()) {
                 log.info("[GATEWAY] 要删除的方法信息: {}, 方法条数: {}", existMethod, existMethod.size());
-                existMethod.forEach(invokeKey -> {
+                for (String invokeKey : existMethod) {
                     final String[] split = invokeKey.split("\\|");
                     if (split.length == 2) {
                         infoComponent.deleteMethod(handle, groupName, split[0], Integer.valueOf(split[1]));
                     }
-                });
+                }
             }
 
             if (!clazzList.isEmpty()) {

@@ -23,6 +23,7 @@ public class UpdateMapperElement implements BaseMapperElement {
     private boolean force;
     private String prefix;
     private String[] wheres;
+    private List<String> ands;
     private String[] values;
 
 
@@ -78,6 +79,14 @@ public class UpdateMapperElement implements BaseMapperElement {
         return this;
     }
 
+    public UpdateMapperElement and(String andSome) {
+        if (null == this.ands) {
+            this.ands = new ArrayList<>();
+        }
+        this.ands.add(andSome);
+        return this;
+    }
+
     @Override
     public String build() {
         if (!force) {
@@ -96,7 +105,7 @@ public class UpdateMapperElement implements BaseMapperElement {
         }
 
         if (notEmpty(wheres)) {
-            sentence.append(new WhereMapperElement(force).where(wheres).force(prefix).build());
+            sentence.append(new WhereMapperElement(force).where(wheres).and(ands).force(prefix).build());
         }
         return sentence.toString();
     }

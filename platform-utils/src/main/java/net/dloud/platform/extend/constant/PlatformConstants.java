@@ -18,6 +18,8 @@ public class PlatformConstants {
 
     public static final String APPNAME = CONFIG.getProperty("app.name", "");
 
+    public static final String GROUP_PARAM = "group";
+
     public static final String DEFAULT_GROUP = "stable";
 
     public static final String GROUP = CONFIG.getProperty("app.group", DEFAULT_GROUP);
@@ -53,15 +55,17 @@ public class PlatformConstants {
 
     public static final int CORRECT_CODE = 0;
 
-    public static final String FROM_KEY = "tenant";
+    public static final String FROM_KEY = "__TENANT";
 
-    public static final String GROUP_KEY = "group";
+    public static final String GROUP_KEY = "__GROUP";
 
-    public static final String PROOF_KEY = "proof";
+    public static final String PROOF_KEY = "__PROOF";
 
-    public static final String SUBGROUP_KEY = "subgroup";
+    public static final String SUBGROUP_KEY = "__SUB_GROUP";
 
-    public static final String HANDGROUP_KEY = "handgroup";
+    public static final String HANDGROUP_KEY = "__HAND_GROUP";
+
+    public static final String SPREAD_KEY = "__SPREAD";
 
 
     public static final String SOURCE_MYSQL = "mysql";

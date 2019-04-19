@@ -32,6 +32,7 @@ public class SelectMapperElement implements BaseMapperElement {
     private boolean force;
     private String prefix;
     private String[] wheres;
+    private List<String> ands;
     private List<String> whereSubs;
     private String[] groups;
     private String[] having;
@@ -94,23 +95,38 @@ public class SelectMapperElement implements BaseMapperElement {
         return this;
     }
 
+    public SelectMapperElement innerJoin(String asTable, TableMapperElement joinTable) {
+        sentence.append(INNER_JOIN).append(joinTable.build()).append(" ").append(asTable);
+        return this;
+    }
+
     public SelectMapperElement innerJoin(String asTable, TableMapperElement joinTable, String joinOn) {
         sentence.append(INNER_JOIN).append(joinTable.build()).append(" ").append(asTable).append(ON).append(joinOn);
         return this;
     }
 
     public SelectMapperElement innerJoin(BaseMapperElement joinSelect) {
-        sentence.append(INNER_JOIN).append(joinSelect.build());
+        sentence.append(INNER_JOIN).append(LEFT_BRACKET).append(joinSelect.build()).append(RIGHT_BRACKET);
+        return this;
+    }
+
+    public SelectMapperElement innerJoin(String asTable, BaseMapperElement joinSelect) {
+        sentence.append(INNER_JOIN).append(LEFT_BRACKET).append(joinSelect.build()).append(RIGHT_BRACKET).append(asTable);
         return this;
     }
 
     public SelectMapperElement innerJoin(String asTable, BaseMapperElement joinSelect, String joinOn) {
-        sentence.append(INNER_JOIN).append(joinSelect.build()).append(" ").append(asTable).append(ON).append(joinOn);
+        sentence.append(INNER_JOIN).append(LEFT_BRACKET).append(joinSelect.build()).append(RIGHT_BRACKET).append(asTable).append(ON).append(joinOn);
         return this;
     }
 
     public SelectMapperElement leftJoin(TableMapperElement joinTable) {
         sentence.append(LEFT_JOIN).append(joinTable.build());
+        return this;
+    }
+
+    public SelectMapperElement leftJoin(String asTable, TableMapperElement joinTable) {
+        sentence.append(LEFT_JOIN).append(joinTable.build()).append(" ").append(asTable);
         return this;
     }
 
@@ -120,17 +136,27 @@ public class SelectMapperElement implements BaseMapperElement {
     }
 
     public SelectMapperElement leftJoin(BaseMapperElement joinSelect) {
-        sentence.append(LEFT_JOIN).append(joinSelect.build());
+        sentence.append(LEFT_JOIN).append(LEFT_BRACKET).append(joinSelect.build()).append(RIGHT_BRACKET);
+        return this;
+    }
+
+    public SelectMapperElement leftJoin(String asTable, BaseMapperElement joinSelect) {
+        sentence.append(LEFT_JOIN).append(LEFT_BRACKET).append(joinSelect.build()).append(RIGHT_BRACKET).append(asTable);
         return this;
     }
 
     public SelectMapperElement leftJoin(String asTable, BaseMapperElement joinSelect, String joinOn) {
-        sentence.append(LEFT_JOIN).append(joinSelect.build()).append(" ").append(asTable).append(ON).append(joinOn);
+        sentence.append(LEFT_JOIN).append(LEFT_BRACKET).append(joinSelect.build()).append(RIGHT_BRACKET).append(asTable).append(ON).append(joinOn);
         return this;
     }
 
     public SelectMapperElement rightJoin(TableMapperElement joinTable) {
         sentence.append(RIGHT_JOIN).append(joinTable.build());
+        return this;
+    }
+
+    public SelectMapperElement rightJoin(String asTable, TableMapperElement joinTable) {
+        sentence.append(RIGHT_JOIN).append(joinTable.build()).append(" ").append(asTable);
         return this;
     }
 
@@ -140,12 +166,17 @@ public class SelectMapperElement implements BaseMapperElement {
     }
 
     public SelectMapperElement rightJoin(BaseMapperElement joinSelect) {
-        sentence.append(RIGHT_JOIN).append(joinSelect.build());
+        sentence.append(RIGHT_JOIN).append(LEFT_BRACKET).append(joinSelect.build()).append(RIGHT_BRACKET);
+        return this;
+    }
+
+    public SelectMapperElement rightJoin(String asTable, BaseMapperElement joinSelect) {
+        sentence.append(RIGHT_JOIN).append(LEFT_BRACKET).append(joinSelect.build()).append(RIGHT_BRACKET).append(asTable);
         return this;
     }
 
     public SelectMapperElement rightJoin(String asTable, BaseMapperElement joinSelect, String joinOn) {
-        sentence.append(RIGHT_JOIN).append(joinSelect.build()).append(" ").append(asTable).append(ON).append(joinOn);
+        sentence.append(RIGHT_JOIN).append(LEFT_BRACKET).append(joinSelect.build()).append(RIGHT_BRACKET).append(asTable).append(ON).append(joinOn);
         return this;
     }
 
@@ -164,14 +195,24 @@ public class SelectMapperElement implements BaseMapperElement {
         return this;
     }
 
-    public SelectMapperElement whereSub(String asTable, BaseMapperElement subSelect) {
-        this.whereSubs = new ArrayList<>();
-        this.whereSubs.add(LEFT_BRACKET + subSelect.build() + RIGHT_BRACKET + " " + asTable);
+    public SelectMapperElement and(String andSome) {
+        if (null == this.ands) {
+            this.ands = new ArrayList<>();
+        }
+        this.ands.add(andSome);
         return this;
     }
 
-    public SelectMapperElement andSub(String asTable, BaseMapperElement subSelect) {
-        this.whereSubs.add(LEFT_BRACKET + subSelect.build() + RIGHT_BRACKET + " " + asTable);
+    public SelectMapperElement whereSub(BaseMapperElement subSelect, String append) {
+        if (null == this.whereSubs) {
+            this.whereSubs = new ArrayList<>();
+        }
+        this.whereSubs.add(LEFT_BRACKET + subSelect.build() + RIGHT_BRACKET + " " + append);
+        return this;
+    }
+
+    public SelectMapperElement andSub(BaseMapperElement subSelect, String append) {
+        this.whereSubs.add(LEFT_BRACKET + subSelect.build() + RIGHT_BRACKET + " " + append);
         return this;
     }
 
@@ -221,16 +262,21 @@ public class SelectMapperElement implements BaseMapperElement {
 
     @Override
     public String build() {
+        final WhereMapperElement where = new WhereMapperElement(force);
         if (notEmpty(wheres)) {
-            sentence.append(new WhereMapperElement(force).where(wheres).force(prefix).build());
+            where.where(wheres).and(ands).force(prefix);
         }
         if (notEmpty(whereSubs)) {
             final String[] subs = new String[whereSubs.size()];
             for (int i = 0; i < whereSubs.size(); i++) {
                 subs[i] = whereSubs.get(i);
             }
-            sentence.append(new WhereMapperElement(force).where(subs).force(prefix).build());
+            where.where(subs).force(prefix);
         }
+        if (!where.isEmpty()) {
+            sentence.append(where.build());
+        }
+
         if (notEmpty(groups)) {
             sentence.append(GROUP_BY);
             stringJoin(this, sentence, COMMA, groups);

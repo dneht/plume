@@ -36,7 +36,7 @@ import java.security.NoSuchAlgorithmException;
 public class HttpClientFactory {
 
     public static synchronized CloseableHttpClient createHttpClient() {
-        return createHttpClient(100, 10, 5000, 2);
+        return createHttpClient(800, 200, 4000, 2);
     }
 
     /**

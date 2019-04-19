@@ -46,9 +46,13 @@ import static net.dloud.platform.parse.dubbo.wrapper.DubboWrapper.dubboProvider;
 @Component
 public class GatewayCache {
     /**
-     * 缓存服务和查询结果
+     * 缓存查询结果
      */
     private static Cache<InvokeKey, InvokeDetailCache> genericCache;
+    /**
+     * 缓存服务引用
+     */
+    private static Cache<String, ReferenceConfig<GenericService>> referenceCache;
     /**
      * 用户信息相关
      */
@@ -87,8 +91,12 @@ public class GatewayCache {
             genericCache = Caffeine.newBuilder().maximumSize(1_000)
                     .expireAfterWrite(expireAfterWrite, TimeUnit.MINUTES)
                     .refreshAfterWrite(refreshAfterWrite, TimeUnit.MINUTES)
-                    .removalListener(this::invokeRemove)
                     .build(this::invokeCache);
+        }
+        if (null == referenceCache) {
+            referenceCache = Caffeine.newBuilder().maximumSize(1_000)
+                    .removalListener(this::referenceRemove)
+                    .build();
         }
         if (null == tokenCache) {
             tokenCache = Caffeine.newBuilder().maximumSize(100_000)
@@ -126,7 +134,7 @@ public class GatewayCache {
             }
             Map<String, InjectionInfo> injectParam = Maps.newHashMapWithExpectedSize(invokeSize);
             if (!token) {
-                log.info("[GATEWAY}] 当前输入参数对应的名称和类型: {}", names, types);
+                log.info("[GATEWAY] 当前输入参数对应的名称和类型: {}, {}", names, types);
 
                 if (null != methodSimple.getInjectionInfo()) {
                     injectParam = KryoBaseUtil.readFromByteArray(methodSimple.getInjectionInfo());
@@ -136,24 +144,42 @@ public class GatewayCache {
                 }
             }
 
-            ReferenceConfig<GenericService> reference = new ReferenceConfig<>();
-            reference.setInterface(methodSimple.getClazzName());
-            reference.setApplication(applicationConfig);
-            reference.setRegistry(registryConfig);
-            reference.setConsumer(consumerConfig);
-            reference.setGeneric(true);
-
             present = new InvokeDetailCache(names.toArray(new String[0]), types.toArray(new String[0]),
-                    methodSimple.getIsWhitelist(), methodSimple.getCacheTime(), methodSimple.getIsTrack(), reference, injectParam);
+                    methodSimple.getIsWhitelist(), methodSimple.getClazzName(), methodSimple.getCacheTime(),
+                    methodSimple.getIsTrack(), injectParam);
             genericCache.put(key, present);
         }
         return present;
     }
 
-    public void invokeRemove(InvokeKey key, InvokeDetailCache cache, RemovalCause cause) {
-        log.info("[GATEWAY] 网关缓存[{}]将被移除[{}]", key, cause);
-        final ReferenceConfig<GenericService> reference = cache.getReference();
+    public ReferenceConfig<GenericService> referenceConfig(String clazzName) {
+        ReferenceConfig<GenericService> reference = referenceCache.getIfPresent(clazzName);
+        if (null == reference) {
+            reference = new ReferenceConfig<>();
+            reference.setInterface(clazzName);
+            reference.setApplication(applicationConfig);
+            reference.setRegistry(registryConfig);
+            reference.setConsumer(consumerConfig);
+            reference.setGeneric(true);
+            referenceCache.put(clazzName, reference);
+        }
+        return reference;
+    }
+
+    public void referenceClean(String clazzName) {
+        log.info("[GATEWAY] 网关缓存[{}]因修改将被移除", clazzName);
+        ReferenceConfig<GenericService> reference = referenceCache.getIfPresent(clazzName);
         if (null != reference) {
+            log.info("[GATEWAY] 网关缓存[{}]移除成功", clazzName);
+            referenceCache.invalidate(clazzName);
+            reference.destroy();
+        }
+    }
+
+    public void referenceRemove(String key, ReferenceConfig<GenericService> reference, RemovalCause cause) {
+        log.info("[GATEWAY] 网关缓存[{}]因驱逐将被移除[{}]", key, cause);
+        if (null != reference) {
+            log.info("[GATEWAY] 网关缓存[{}]移除成功", key);
             reference.destroy();
         }
     }
@@ -181,9 +207,9 @@ public class GatewayCache {
             log.info("[GATEWAY] 当前校验等级: {}", inject);
 
             try {
-                final InvokeDetailCache invokeDetailCache = invokeCache(new InvokeKey(key.getGroup(), inject, 1), true);
-                present = (Map) invokeDetailCache.getReference().get().$invoke(StringUtil.splitLastByDot(inject),
-                        invokeDetailCache.getTypes(), new Object[]{token});
+                final InvokeDetailCache cache = invokeCache(new InvokeKey(key.getGroup(), inject, 1), true);
+                present = (Map) referenceConfig(cache.getClassName()).get()
+                        .$invoke(StringUtil.splitLastByDot(inject), cache.getTypes(), new Object[]{token});
                 log.info("[GATEWAY] 用户获取完毕, 信息: {}", present);
 
                 tokenCache.put(key, present);
@@ -210,11 +236,15 @@ public class GatewayCache {
         }
     }
 
-    public Cache<InvokeKey, InvokeDetailCache> getGenericCache() {
+    public static Cache<InvokeKey, InvokeDetailCache> getGenericCache() {
         return genericCache;
     }
 
-    public Cache<TokenKey, Map<String, Object>> getTokenCache() {
+    public static Cache<String, ReferenceConfig<GenericService>> getReferenceCache() {
+        return referenceCache;
+    }
+
+    public static Cache<TokenKey, Map<String, Object>> getTokenCache() {
         return tokenCache;
     }
 }

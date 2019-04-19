@@ -24,6 +24,7 @@ import net.dloud.platform.extend.exception.RefundException;
 @Slf4j
 @Activate(group = Constants.PROVIDER, value = "providerFilter", order = 100)
 public class ProviderFilterImpl implements Filter {
+
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
         log.info("[{}] 提供[DUBBO]服务: 方法名: {}, 附加参数: {}, 当前分组: {}", PlatformConstants.APPNAME,
@@ -41,7 +42,7 @@ public class ProviderFilterImpl implements Filter {
             log.warn("[DUBBO] 调用了未授权的资源: {}", ex.getMessage());
             return new RpcResult(ex.toResult());
         } catch (InnerException ex) {
-            log.warn("[DUBBO] 内部调用异常: ", ex.getException());
+            log.warn("[DUBBO] 内部调用异常: {}", ex.getException());
             return new RpcResult(ex.toResult());
         } catch (Throwable ex) {
             log.error("[DUBBO] 调用未知异常: ", ex);

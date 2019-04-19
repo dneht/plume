@@ -6,6 +6,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.extern.slf4j.Slf4j;
 import net.dloud.platform.common.extend.CollectionUtil;
 import net.dloud.platform.common.extend.NumberUtil;
+import net.dloud.platform.common.gateway.bean.RequestInfo;
 import net.dloud.platform.common.provider.CurrentLimit;
 import net.dloud.platform.extend.bucket.Bandwidth;
 import net.dloud.platform.extend.bucket.Bucket;
@@ -33,7 +34,7 @@ public class SimpleCurrentLimit implements CurrentLimit<Long> {
 
 
     @Override
-    public Long getKey(ServerRequest request, Map<String, Object> member) {
+    public Long getKey(RequestInfo request, Map<String, Object> member) {
         long newKey;
         try {
             newKey = CollectionUtil.notEmpty(member) ? NumberUtil.toLong(member.get("userId")) : convertIp(request);
@@ -45,7 +46,7 @@ public class SimpleCurrentLimit implements CurrentLimit<Long> {
     }
 
     @Override
-    public boolean tryConsume(ServerRequest request, Map<String, Object> member) {
+    public boolean tryConsume(RequestInfo request, Map<String, Object> member) {
         final Long key = getKey(request, member);
         Bucket bucket;
         List<Bandwidth> bandwidths = bucketCache.getIfPresent(key);
@@ -60,7 +61,7 @@ public class SimpleCurrentLimit implements CurrentLimit<Long> {
         return consume;
     }
 
-    private static long convertIp(org.springframework.web.reactive.function.server.ServerRequest request) {
+    private static long convertIp(RequestInfo request) {
         return -((((long) Integer.MAX_VALUE) << 8) + AddressGet.remoteAddress(request));
     }
 

@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.dloud.platform.common.domain.message.KafkaMessage;
 import net.dloud.platform.common.extend.StringUtil;
 import net.dloud.platform.extend.constant.PlatformConstants;
+import net.dloud.platform.parse.utils.SourceGet;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,7 @@ public final class KafkaMessageListener implements AcknowledgingMessageListener<
 
         if (null == message) {
             log.warn("[MESSAGE] 当前消息为空, 不进行消费");
+            acknowledgment.acknowledge();
             return;
         }
 
@@ -50,14 +52,17 @@ public final class KafkaMessageListener implements AcknowledgingMessageListener<
         final String messageBean = message.getBean();
         if (null == messageBean) {
             log.info("[MESSAGE] 当前消息消费方法为空, 不进行消费: proof={}", proof);
+            acknowledgment.acknowledge();
             return;
         }
         if (null == message.getContent()) {
             log.info("[MESSAGE] 当前消息内容为空, 不进行消费: proof={}", proof);
+            acknowledgment.acknowledge();
             return;
         }
         if (message.getOnly() && !PlatformConstants.GROUP.equalsIgnoreCase(message.getGroup())) {
             log.info("[MESSAGE] 当前消息设置为不消费: proof={}, {}", proof, message.getGroup());
+            acknowledgment.acknowledge();
             return;
         }
 

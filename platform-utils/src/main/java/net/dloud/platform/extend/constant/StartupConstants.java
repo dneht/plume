@@ -11,6 +11,8 @@ public class StartupConstants {
 
     public static String RUN_HOST;
 
+    public static String RUN_LIBS;
+
     public static int SERVER_PORT;
 
     public static int DUBBO_PORT;

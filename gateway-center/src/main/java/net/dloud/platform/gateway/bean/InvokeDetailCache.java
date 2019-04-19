@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import net.dloud.platform.common.gateway.info.InjectionInfo;
 
+import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -28,25 +29,36 @@ public class InvokeDetailCache {
     /**
      * 是否在白名单
      */
-    private Boolean whitelist = false;
+    private Boolean whitelist;
+
+    /**
+     * 属于的类型
+     */
+    private String  className;
 
     /**
      * 缓存时间
      */
-    private Integer cacheTime = 0;
+    private Integer cacheTime;
 
     /**
      * 缓存时间
      */
-    private Boolean isTrack = false;
-
-    /**
-     * 泛化引用
-     */
-    private ReferenceConfig<GenericService> reference;
+    private Boolean isTrack;
 
     /**
      * 注入参数
      */
     private Map<String, InjectionInfo> injects;
+
+    @Override
+    public String toString() {
+        return "InvokeDetailCache{" +
+                "names=" + Arrays.toString(names) +
+                ", types=" + Arrays.toString(types) +
+                ", whitelist=" + whitelist +
+                ", cacheTime=" + cacheTime +
+                ", isTrack=" + isTrack +
+                '}';
+    }
 }

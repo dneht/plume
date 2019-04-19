@@ -12,6 +12,7 @@ import static net.dloud.platform.parse.utils.SourceGet.clientFrom;
  * @create 2019-02-24 20:43
  **/
 public interface ShardingComponent extends MapperComponent {
+    @Override
     default String source() {
         if (StringUtil.notBlank(clientFrom.get())) {
             return '_' + clientFrom.get();

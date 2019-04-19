@@ -1,6 +1,7 @@
 package net.dloud.platform.common.provider;
 
 
+import net.dloud.platform.common.gateway.bean.RequestInfo;
 import org.springframework.web.reactive.function.server.ServerRequest;
 
 import java.util.Map;
@@ -17,7 +18,7 @@ public interface CurrentLimit<T> {
      * @param member  用户信息
      * @return
      */
-    T getKey(ServerRequest request, Map<String, Object> member);
+    T getKey(RequestInfo request, Map<String, Object> member);
 
     /**
      * 消费token
@@ -26,5 +27,5 @@ public interface CurrentLimit<T> {
      * @param member    用户信息
      * @return
      */
-    boolean tryConsume(ServerRequest request, Map<String, Object> member);
+    boolean tryConsume(RequestInfo request, Map<String, Object> member);
 }

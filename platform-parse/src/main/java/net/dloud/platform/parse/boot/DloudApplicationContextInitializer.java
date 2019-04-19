@@ -44,10 +44,10 @@ public class DloudApplicationContextInitializer implements ApplicationContextIni
                 StartupConstants.RUN_HOST = null == local ? AddressGet.getByDubbo() : local.getHostName();
             } else {
                 StartupConstants.RUN_HOST = AddressGet.getByDubbo();
-                System.clearProperty("port");
             }
         }
         StartupConstants.RUN_MODE = System.getProperty("mode", "dev");
+        StartupConstants.RUN_LIBS = System.getProperty("lib.path");
 
         final ConfigurableEnvironment environment = context.getEnvironment();
         if (environment.getPropertySources().contains(PropertySourcesConstants.APOLLO_BOOTSTRAP_PROPERTY_SOURCE_NAME)) {
@@ -60,30 +60,32 @@ public class DloudApplicationContextInitializer implements ApplicationContextIni
             } else {
                 final String[] portSplit = port.split("-");
                 if (portSplit.length < 1) {
-                    throw new InnerException("App port range set error");
-                }
-                // port range default is 100
-                final int portStart = Integer.parseInt(portSplit[0]);
-                final int portEnd = portSplit.length == 2 ? Integer.parseInt(portSplit[1]) : portStart + 100;
-                log.info("App port range from {} to {}", portStart, portEnd);
+                    StartupConstants.SERVER_PORT = Integer.parseInt(port);
+                    StartupConstants.DUBBO_PORT = 20880;
+                } else {
+                    // port range default is 100
+                    final int portStart = Integer.parseInt(portSplit[0]);
+                    final int portEnd = portSplit.length == 2 ? Integer.parseInt(portSplit[1]) : portStart + 100;
+                    log.info("App port range from {} to {}", portStart, portEnd);
 
-                int availableCount = 0;
-                int[] availablePorts = new int[2];
-                for (int one = portStart; one < portEnd; one++) {
-                    try {
-                        final ServerSocket server = new ServerSocket(one);
-                        availablePorts[availableCount] = server.getLocalPort();
-                        availableCount += 1;
-                        server.close();
-                        if (availableCount >= 2) {
-                            break;
+                    int availableCount = 0;
+                    int[] availablePorts = new int[2];
+                    for (int one = portStart; one < portEnd; one++) {
+                        try {
+                            final ServerSocket server = new ServerSocket(one);
+                            availablePorts[availableCount] = server.getLocalPort();
+                            availableCount += 1;
+                            server.close();
+                            if (availableCount >= 2) {
+                                break;
+                            }
+                        } catch (IOException e) {
+                            log.debug("Port {} is already used", one);
                         }
-                    } catch (IOException e) {
-                        log.debug("Port {} is already used", port);
                     }
+                    StartupConstants.SERVER_PORT = availablePorts[0];
+                    StartupConstants.DUBBO_PORT = availablePorts[1];
                 }
-                StartupConstants.SERVER_PORT = availablePorts[0];
-                StartupConstants.DUBBO_PORT = availablePorts[1];
             }
 
             environment.getPropertySources().addFirst(new MapPropertySource(BOOTSTRAP_PROPERTY_SOURCE_NAME, ImmutableMap.of(
