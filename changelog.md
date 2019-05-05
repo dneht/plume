@@ -1,3 +1,7 @@
+## 0.7.3.0 (19.05.05)
+1. proof可以用于线程池，添加LocalContext
+2. mapper组件bugfix
+
 ## 0.7.2.0 (19.04.19)
 1. 添加http动态路由
 2. 继续优化dubbo缓存

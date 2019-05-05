@@ -263,19 +263,14 @@ public class SelectMapperElement implements BaseMapperElement {
     @Override
     public String build() {
         final WhereMapperElement where = new WhereMapperElement(force);
-        if (notEmpty(wheres)) {
-            where.where(wheres).and(ands).force(prefix);
-        }
         if (notEmpty(whereSubs)) {
             final String[] subs = new String[whereSubs.size()];
             for (int i = 0; i < whereSubs.size(); i++) {
                 subs[i] = whereSubs.get(i);
             }
-            where.where(subs).force(prefix);
+            where.where(subs).prefix(prefix);
         }
-        if (!where.isEmpty()) {
-            sentence.append(where.build());
-        }
+        sentence.append(where.where(wheres).and(ands).prefix(prefix).build());
 
         if (notEmpty(groups)) {
             sentence.append(GROUP_BY);

@@ -35,21 +35,27 @@ public class WhereMapperElement implements BaseMapperElement {
         return this;
     }
 
-    public WhereMapperElement and(String... ands) {
-        if (notEmpty(ands)) {
-            this.wheres.addAll(Arrays.asList(ands));
+    public WhereMapperElement and(String and) {
+        if (notEmpty(and)) {
+            if (null == this.wheres) {
+                this.wheres = new ArrayList<>();
+            }
+            this.wheres.add(and);
         }
         return this;
     }
 
     public WhereMapperElement and(List<String> ands) {
         if (notEmpty(ands)) {
+            if (null == this.wheres) {
+                this.wheres = new ArrayList<>();
+            }
             this.wheres.addAll(ands);
         }
         return this;
     }
 
-    public WhereMapperElement force(String prefix) {
+    public WhereMapperElement prefix(String prefix) {
         if (notEmpty(prefix)) {
             this.prefix = prefix;
         }
@@ -62,23 +68,25 @@ public class WhereMapperElement implements BaseMapperElement {
 
     @Override
     public String build() {
-        final int length = wheres.size();
-        if (length > 0) {
-            if (sentence.indexOf(WHERE) > 0) {
-                sentence.append(AND);
+        if (notEmpty(wheres)) {
+            stringJoin(this, handle(), wheres.size(), AND, wheres);
+        }
+        if (!force) {
+            if (notEmpty(prefix)) {
+                handle().append(prefix).append(".").append(AND_SOFT_DELETE);
             } else {
-                sentence.append(WHERE);
+                handle().append(AND_SOFT_DELETE);
             }
-            if (!force) {
-                if (notEmpty(prefix)) {
-                    sentence.append(prefix).append(".").append(AND_SOFT_DELETE).append(AND);
-                } else {
-                    sentence.append(AND_SOFT_DELETE).append(AND);
-                }
-            }
-
-            stringJoin(this, sentence, length, AND, wheres);
         }
         return sentence.toString();
+    }
+
+    private StringBuilder handle() {
+        if (sentence.indexOf(WHERE) >= 0) {
+            sentence.append(AND);
+        } else {
+            sentence.append(WHERE);
+        }
+        return sentence;
     }
 }

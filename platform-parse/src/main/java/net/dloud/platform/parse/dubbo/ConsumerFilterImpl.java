@@ -19,6 +19,7 @@ import net.dloud.platform.extend.constant.PlatformExceptionEnum;
 import net.dloud.platform.extend.exception.InnerException;
 import net.dloud.platform.extend.exception.PassedException;
 import net.dloud.platform.extend.exception.RefundException;
+import net.dloud.platform.parse.context.LocalContext;
 
 import java.util.Map;
 
@@ -34,10 +35,11 @@ public class ConsumerFilterImpl implements Filter {
     @SuppressWarnings("unchecked")
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
         final RpcContext context = RpcContext.getContext();
-        final String tenant = context.getAttachment(PlatformConstants.FROM_KEY);
+        final String from = context.getAttachment(PlatformConstants.FROM_KEY);
         final String proof = context.getAttachment(PlatformConstants.PROOF_KEY);
-        log.info("[{}] 消费[DUBBO]服务: 来源: {}, 方法名: {}, 附加参数: {}", PlatformConstants.APPNAME,
-                tenant, invocation.getMethodName(), invocation.getAttachments());
+        LocalContext.set(new LocalContext(from, proof));
+        log.info("[{}] 消费[DUBBO]服务: 来源: {}, 凭证: {}, 方法名: {}, 附加参数: {}", PlatformConstants.APPNAME,
+                from, proof, invocation.getMethodName(), invocation.getAttachments());
         context.setInvoker(invoker).setInvocation(invocation).setLocalAddress(NetUtils.getLocalHost(), 0)
                 .setRemoteAddress(invoker.getUrl().getHost(), invoker.getUrl().getPort());
         if (invocation instanceof RpcInvocation) {
@@ -106,8 +108,9 @@ public class ConsumerFilterImpl implements Filter {
             throw new InnerException(ex.getMessage(), ex.getCause());
         } finally {
             context.clearAttachments();
-            context.setAttachment(PlatformConstants.FROM_KEY, tenant);
+            context.setAttachment(PlatformConstants.FROM_KEY, from);
             context.setAttachment(PlatformConstants.PROOF_KEY, proof);
+            LocalContext.remove();
         }
     }
 }

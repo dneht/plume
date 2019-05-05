@@ -1,11 +1,7 @@
 package net.dloud.platform.parse.module;
 
-import com.alibaba.dubbo.rpc.RpcContext;
-import net.dloud.platform.common.extend.StringUtil;
 import net.dloud.platform.common.mapper.MapperComponent;
-import net.dloud.platform.extend.constant.PlatformConstants;
-
-import static net.dloud.platform.parse.utils.SourceGet.clientFrom;
+import net.dloud.platform.parse.context.LocalContext;
 
 /**
  * @author QuDasheng
@@ -14,9 +10,6 @@ import static net.dloud.platform.parse.utils.SourceGet.clientFrom;
 public interface ShardingComponent extends MapperComponent {
     @Override
     default String source() {
-        if (StringUtil.notBlank(clientFrom.get())) {
-            return '_' + clientFrom.get();
-        }
-        return '_' + RpcContext.getContext().getAttachment(PlatformConstants.FROM_KEY);
+        return '_' + LocalContext.load().getFrom();
     }
 }

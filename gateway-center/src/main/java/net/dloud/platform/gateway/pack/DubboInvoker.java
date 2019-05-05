@@ -138,7 +138,7 @@ public class DubboInvoker {
                 if (!fromPath && response.getCode() != 0) {
                     response.setPreload(Collections.singleton(response.getPreload()));
                 }
-                log.info("[GATEWAY] 来源: {} | 分组: {} | 调用方法: {} | 返回结果: {} | 凭证: {}",
+                log.debug("[GATEWAY] 来源: {} | 分组: {} | 调用方法: {} | 返回结果: {} | 凭证: {}",
                         inputTenant, inputGroup, invokeNames, response.getPreload(), proof);
 
                 return response;
@@ -226,9 +226,14 @@ public class DubboInvoker {
             invokeParams.add(getParam);
         }
 
-        log.debug("[GATEWAY] 将调用的方法参数为:, {} = {} | 凭证: {}", methodName, cache, proof);
-        Object result = gatewayCache.referenceConfig(cache.getClassName()).get()
-                .$invoke(methodName, cache.getTypes(), invokeParams.toArray());
+        log.debug("[GATEWAY] 将调用的方法参数为: {} = {} | 凭证: {}", methodName, cache, proof);
+        Object result = null;
+        try {
+            result = gatewayCache.referenceConfig(cache.getClassName()).get()
+                    .$invoke(methodName, cache.getTypes(), invokeParams.toArray());
+        } catch (NoSuchMethodError ex) {
+            gatewayCache.referenceClean(cache.getClassName());
+        }
         if (null == result) {
             throw new PassedException(PlatformExceptionEnum.RESULT_ERROR);
         }

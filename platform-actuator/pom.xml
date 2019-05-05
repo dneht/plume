@@ -5,7 +5,7 @@
     <parent>
         <artifactId>stand-all</artifactId>
         <groupId>net.dloud.stand</groupId>
-        <version>0.7.2.0</version>
+        <version>0.7.3.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 

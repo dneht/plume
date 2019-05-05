@@ -104,9 +104,7 @@ public class UpdateMapperElement implements BaseMapperElement {
             stringJoin(this, sentence, values.length, COMMA, values);
         }
 
-        if (notEmpty(wheres)) {
-            sentence.append(new WhereMapperElement(force).where(wheres).and(ands).force(prefix).build());
-        }
+        sentence.append(new WhereMapperElement(force).where(wheres).and(ands).prefix(prefix).build());
         return sentence.toString();
     }
 }

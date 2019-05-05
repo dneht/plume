@@ -2,7 +2,7 @@ package net.dloud.platform.parse.aspect;
 
 import net.dloud.platform.common.extend.StringUtil;
 import net.dloud.platform.parse.aspect.annotation.ShardingFrom;
-import net.dloud.platform.parse.utils.SourceGet;
+import net.dloud.platform.parse.context.LocalContext;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
@@ -25,22 +25,22 @@ public class ShardingFromAspect {
     @Before("pointCut() && @annotation(name)")
     public void beforeInvoke(JoinPoint point, ShardingFrom name) {
         if (StringUtil.notBlank(name.value())) {
-            SourceGet.clientFrom.set(name.value());
+            LocalContext.set(name.value());
         }
         final Object[] args = point.getArgs();
         if (null != args && args.length > 0) {
-            SourceGet.clientFrom.set(String.valueOf(args[0]));
+            LocalContext.set(String.valueOf(args[0]));
         }
     }
 
     @AfterReturning(pointcut = "pointCut()", returning = "value")
     public Object afterReturning(Object value) {
-        SourceGet.clientFrom.remove();
+        LocalContext.remove();
         return value;
     }
 
     @AfterThrowing(pointcut = "pointCut()")
     public void afterThrowing() {
-        SourceGet.clientFrom.remove();
+        LocalContext.remove();
     }
 }

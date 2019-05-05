@@ -28,6 +28,8 @@ public class PlatformConstants {
 
     public static final String MODE_DEV = "dev";
 
+    public static final String MODE_PRE = "pre";
+
     public static final int PROCESSOR_NUMBER = Runtime.getRuntime().availableProcessors();
 
     public static final String ZK_ADDRESS = COMMON.getProperty("zookeeper.address", "");
@@ -54,6 +56,8 @@ public class PlatformConstants {
 
 
     public static final int CORRECT_CODE = 0;
+
+    public static final String LOCAL_KEY = "__DLOUD";
 
     public static final String FROM_KEY = "__TENANT";
 

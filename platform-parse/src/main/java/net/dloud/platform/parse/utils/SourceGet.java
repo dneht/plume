@@ -22,9 +22,6 @@ public class SourceGet {
     private static final String colon = ":";
     private static final String redisPre = "redis://";
 
-    public static ThreadLocal<String> kafkaProof = new ThreadLocal<>();
-    public static ThreadLocal<String> clientFrom = new ThreadLocal<>();
-
 
     public static LettuceConnectionFactory getLettuceFactory(String url, String pwd) {
         url = url.replaceFirst(redisPre, "");
