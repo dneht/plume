@@ -71,7 +71,7 @@
         <validation-api.version>2.0.1.Final</validation-api.version>
         <guava.version>26.0-jre</guava.version>
         <fastjson.version>1.2.49</fastjson.version>
-        <xstream.version>1.4.10-java7</xstream.version>
+        <xstream.version>1.4.11</xstream.version>
         <protobuf.version>3.6.1</protobuf.version>
         <tink.version>1.2.0</tink.version>
         <snappy.version>1.1.7.2</snappy.version>
