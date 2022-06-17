@@ -22,7 +22,7 @@
         <jdt.version>3.16.0</jdt.version>
         <snappy.version>1.1.7.2</snappy.version>
         <kryo.version>5.0.0-RC1</kryo.version>
-        <fastjson.version>1.2.49</fastjson.version>
+        <fastjson.version>1.2.83</fastjson.version>
         <maven.version>3.3.9</maven.version>
     </properties>
 
