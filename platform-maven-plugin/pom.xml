@@ -23,7 +23,7 @@
         <snappy.version>1.1.7.2</snappy.version>
         <kryo.version>5.0.0-RC1</kryo.version>
         <fastjson.version>1.2.49</fastjson.version>
-        <maven.version>3.3.9</maven.version>
+        <maven.version>3.8.1</maven.version>
     </properties>
 
     <dependencies>
